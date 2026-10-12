@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="6">
+<meta name="gt-version" content="8">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -272,7 +272,7 @@ select[data-auto]{font-style:italic}
 :root{--gr:#237a3b;--rg:#d3262b}
 .top{display:grid!important;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px 8px;background:var(--card);margin:-12px -12px 14px;padding:10px 18px 12px;border-bottom:4px solid var(--gr);box-shadow:0 3px 0 0 var(--rg),0 6px 14px rgba(0,0,0,.12)}
 .tabs.mode{justify-content:center;gap:8px;margin:0 0 12px;padding:0;flex-wrap:wrap}
-.mode button{flex:none;width:132px;padding:7px 10px;font-size:14px;font-weight:700;border-radius:10px}
+.mode button{text-transform:uppercase;letter-spacing:.04em;flex:none;width:132px;padding:7px 10px;font-size:14px;font-weight:700;border-radius:10px}
 .mode button.on{background:var(--gr);border-color:var(--gr);color:#fff}
 .brand .bi{width:46px;height:46px}
 .brand b{font-size:27px;font-weight:900;letter-spacing:.02em;line-height:1}
@@ -413,11 +413,22 @@ function empRec(){
  return `<div class="card"><h3 style="margin:0 0 6px">${MOIS[M]} ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES SUP</th><th>CONGÉ</th><th>MALADIE</th><th>ABSENT</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(T.hs)}</td><td>${T.cp} j</td><td>${T.ma} j</td><td>${abTxt(T.ab,T.abh)}</td></tr></tbody></table></div>
  <p style="margin:10px 0 0"><button data-pa="copy">Copier le récapitulatif</button> <span id="cp2" class="mut"></span></p></div>`}
 function sumStaff(){S.staff.people.forEach(p=>{let hs=0,a=0,c=0,ah=0;Object.values(effDays(p.id)).forEach(r=>{if(r.t==='hs')hs+=mins(r.h);else if(r.t==='cp')c++;else if(r.t==='abs'&&r.h)ah+=mins(r.h);else if(r.t)a++});const e=$('[data-fs="'+p.id+'"]');if(e)e.innerHTML='<span class="tfl h">HS '+fmt(hs)+'</span><span class="tfl c">Congés '+c+' j</span><span class="tfl a">Abs '+abTxt(a,ah)+'</span>'})}
+const addD=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+function lvAdd(pid,iso){const all=()=>Object.values(S.leave||{}).map(L=>L[pid]||[]).flat();
+ if(all().some(x=>x.a<=iso&&(x.b||x.a)>=iso))return;
+ const p=all().find(x=>(x.b||x.a)===addD(iso,-1)),n=all().find(x=>x.a===addD(iso,1));
+ if(p&&n){p.b=n.b;for(const y in S.leave){const a=S.leave[y][pid];if(a&&a.includes(n))a.splice(a.indexOf(n),1)}}
+ else if(p)p.b=iso;else if(n)n.a=iso;
+ else{const y=iso.slice(0,4),L=S.leave[y]=S.leave[y]||{};(L[pid]=L[pid]||[]).push({id:'l'+Date.now()+Math.random().toString(36).slice(2,5),a:iso,b:iso})}}
+function lvDel(pid,iso){for(const y in (S.leave||{})){const a=(S.leave[y]||{})[pid];if(!a)continue;
+ for(const x of a.slice()){const b=x.b||x.a;if(iso<x.a||iso>b)continue;
+  if(x.a===b)a.splice(a.indexOf(x),1);else if(iso===x.a)x.a=addD(iso,1);else if(iso===b)x.b=addD(iso,-1);
+  else{const nb=x.b;x.b=addD(iso,-1);const ny=addD(iso,1).slice(0,4),L=S.leave[ny]=S.leave[ny]||{};(L[pid]=L[pid]||[]).push({id:'l'+Date.now()+Math.random().toString(36).slice(2,5),a:addD(iso,1),b:nb})}}}}
 function staffChange(t){const pid=t.dataset.p,f=t.dataset.f;
  if(f==='name'){const p=S.staff.people.find(x=>x.id===pid);p.name=(t.value.trim()||'Sans nom').toUpperCase();save();return}
  const D=sdata(pid,1);
  if(t.dataset.d2){const d=t.dataset.d2,r=D.days[d]=D.days[d]||{};
-  if(f==='t'){r.t=(t.value===''&&t.dataset.auto)?'x':t.value;t.className=t.value?'s-'+t.value:'';const h=t.closest('tr').querySelector('input[data-f=h][data-p="'+pid+'"]');h.style.display=r.t==='hs'||r.t==='abs'?'':'none';h.title=r.t==='abs'?'Heures d’absence (vide = journée entière)':'';if(r.t!=='hs'&&r.t!=='abs'){r.h='';h.value=''}}else r.h=t.value;
+  if(f==='t'){const iso=Y+'-'+String(M+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(t.value==='cp'){lvAdd(pid,iso);r.t=''}else{lvDel(pid,iso);r.t=t.value}t.className=t.value?'s-'+t.value:'';const h=t.closest('tr').querySelector('input[data-f=h][data-p="'+pid+'"]');h.style.display=r.t==='hs'||r.t==='abs'?'':'none';h.title=r.t==='abs'?'Heures d’absence (vide = journée entière)':'';if(r.t!=='hs'&&r.t!=='abs'){r.h='';h.value=''}}else r.h=t.value;
   if(!r.t)delete D.days[d]}
  else if(f==='sig')D.sig=t.checked;
  else if(f==='ac'){D.ac=t.value===''?null:+t.value;t.style.color=D.ac<0?'var(--dng)':''}
