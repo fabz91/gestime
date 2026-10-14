@@ -1,0 +1,29 @@
+MISE A JOUR DU LOGICIEL SANS REINSTALLER
+========================================
+
+PRINCIPE
+- Les nouvelles versions sont deposees sur GitHub (2 fichiers : index.html et version.json).
+- Dans le logiciel : roue dentee (reglages) > "Mettre a jour le logiciel".
+  Il telecharge la derniere version et redemarre tout seul. Vos donnees ne sont pas touchees.
+- Un point rouge apparait sur la roue dentee quand une nouvelle version est disponible.
+- "Revenir a la version d'installation" annule les mises a jour si besoin.
+- Il n'est necessaire de refaire l'installateur que pour changer le programme lui-meme
+  (icone, fonctionnement Windows...). Cela sera dit clairement.
+
+A FAIRE UNE SEULE FOIS
+1) Creez un compte sur github.com (gratuit) puis un depot (bouton "New repository"),
+   par exemple "gestime". Il doit etre en "Public".
+   (Le depot contient le programme, JAMAIS vos donnees : employes, horaires, conges
+   restent sur votre PC et dans Supabase.)
+2) Dans le depot : "Add file" > "Upload files", glissez les 2 fichiers du dossier
+   "mise-a-jour" (index.html et version.json), puis "Commit changes".
+3) (DEJA FAIT pour vous : config.js pointe vers github.com/fabz91/gestime)
+4) Creez l'installateur une derniere fois (CREER-INSTALLATEUR.bat) et installez-le
+   sur vos deux PC. Ensuite, plus besoin.
+
+A CHAQUE NOUVELLE VERSION
+- Je vous donne un nouveau dossier "mise-a-jour". Dans GitHub : "Add file" >
+  "Upload files", glissez index.html et version.json (ils remplacent les anciens),
+  "Commit changes".
+- Sur chaque PC : roue dentee > "Mettre a jour le logiciel". (Attendez 5 minutes
+  environ apres le depot : GitHub met un peu de temps a publier.)

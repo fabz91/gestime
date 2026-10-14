@@ -1,0 +1,35 @@
+SYNCHRONISER LES DONNEES ENTRE PLUSIEURS PC (sans mot de passe)
+
+A. Une seule fois dans Supabase
+  1. SQL Editor > New query : coller le contenu de supabase.sql > Run (doit afficher "Success"). Ce script cree aussi la ligne du 2e magasin (CLAMART).
+     Si vous aviez deja execute l'ancien script, relancez celui-ci : c'est sans risque.
+  2. Project Settings > API Keys : copier la cle "publishable" (ou "anon").
+     L'adresse du projet et cette cle sont deja dans config.js (la cle a remplacer si besoin).
+     JAMAIS la cle "secret" ou "service_role".
+
+B. Sur les PC
+  1. Compiler l'installateur (CREER-INSTALLATEUR.bat) et l'installer sur chaque PC.
+  2. IMPORTANT : ouvrir D'ABORD le logiciel sur le PC qui contient les vraies donnees
+     (ou y faire Reglages > Importer avec votre sauvegarde). A la premiere ouverture,
+     ses donnees sont envoyees en ligne. Les autres PC les recuperent ensuite.
+  3. Sur les autres PC : installer et ouvrir le logiciel. Rien d'autre a faire.
+
+Fonctionnement
+  - Une modification est envoyee en ligne moins d'une seconde apres la saisie.
+  - Chaque PC verifie toutes les 15 secondes et se met a jour (sauf si vous etes en train de taper).
+  - Si deux personnes modifient exactement en meme temps, la 2e saisie est refusee :
+    un message l'indique, les donnees sont rechargees, il faut refaire la derniere saisie.
+  - Sans internet : les modifications restent sur le PC et partent au retour du reseau.
+  - L'etat ("Synchronise", "Hors ligne"...) est visible dans la fenetre de l'engrenage.
+
+Securite
+  - Il n'y a pas de mot de passe : toute personne qui possede l'adresse du projet et la cle
+    (ecrites dans le logiciel installe) pourrait lire ou modifier les donnees. Ne diffusez pas
+    ces deux valeurs ni le dossier du logiciel.
+  - Faites regulierement Reglages > Exporter pour garder une copie a vous.
+  - Un projet gratuit peut etre mis en pause apres une longue inactivite (voir supabase.com).
+
+Deux magasins
+  - L'icone a cote de BREDIS (en haut) permet de passer a CLAMART et inversement.
+  - Chaque magasin a ses propres donnees (employes, conges, plannings), synchronisees separement.
+  - CLAMART demarre vide. Reglages > Exporter / Importer concernent le magasin affiche.

@@ -1,0 +1,46 @@
+{
+  "name": "horaires",
+  "productName": "GESTIME",
+  "version": "1.0.0",
+  "description": "GESTIME : gestion des horaires, employés, intérim et congés",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "fr.horaires.app",
+    "productName": "GESTIME",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "config.js",
+      "icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "include": "installer.nsh"
+    },
+    "extraResources": [
+      {
+        "from": "icon.ico",
+        "to": "icon.ico"
+      }
+    ]
+  }
+}
