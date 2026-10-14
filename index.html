@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="19">
+<meta name="gt-version" content="20">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -517,11 +517,20 @@ function bkInfo(){const e=$('#bkmsg');if(!e)return;const f=$('#bkf');if(f&&windo
  if(!t&&STORE.id==='clamart'){e.textContent='';return}
  if(!t){e.textContent='⚠️ Aucune sauvegarde exportée pour le moment';e.style.color='var(--dng)';return}
  const j=Math.floor((Date.now()-t)/864e5);e.textContent='Dernière sauvegarde : '+(j===0?"aujourd'hui":'il y a '+j+' j');e.style.color=j>30?'var(--dng)':''}
-async function doExport(){const j=JSON.stringify(S,null,1);
- // Nom du fichier : GESTIME-AAAA-MM-JJ.json (PC et navigateur : Windows propose l'emplacement)
+// Export : TOUS les magasins dans un seul fichier GESTIME-AAAA-MM-JJ.json (règle commune GES).
+// Magasin affiché : données en cours ; autres magasins : version en ligne (Supabase) si possible, sinon la copie de ce PC.
+function storeLocal(st){const k=st.id==='bredis'?'horaires-v1':'horaires-v1-'+st.id;let r=null;try{r=window.api?window.api.load(st.id):localStorage.getItem(k)}catch(e){}try{return r?JSON.parse(r):null}catch(e){return null}}
+async function storeData(st){if(st.id===STORE.id)return S;
+ try{if(CFG&&TOK){const a=await sbReq('store?id=eq.'+st.sid+'&select=data');if(a&&a[0]&&a[0].data&&a[0].data.emps)return a[0].data}}catch(e){}
+ return storeLocal(st)}
+async function doExport(){const mag={};for(const st of STORES){const d=await storeData(st);if(d)mag[st.id]=d}
+ const j=JSON.stringify({app:'GESTIME',exporte:new Date().toISOString(),magasins:mag},null,1);
  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='GESTIME-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
  S.lastBackup=Date.now();save();bkInfo()}catch(e){}}
-function applyImport(txt){try{const o=JSON.parse(txt);if(!o||!o.emps||!o.staff||!o.data)throw 0;S=o;if(!S.leave)S.leave={};epMig();crInit();epPauseAll();save();cur=S.emps[0]&&S.emps[0].id;ecur=null;ed=null;render()}
+function applyImport(txt){try{let o=JSON.parse(txt);const multi=!!(o&&o.magasins);
+ if(multi)o=o.magasins[STORE.id]; // fichier avec tous les magasins : on restaure le magasin affiché
+ if(!o||!o.emps||!o.staff||!o.data)throw 0;S=o;if(!S.leave)S.leave={};epMig();crInit();epPauseAll();save();cur=S.emps[0]&&S.emps[0].id;ecur=null;ed=null;render();
+ if(multi){const m=$('#bkmsg');if(m){m.textContent='✓ '+STORE.name+' restauré. Pour l’autre magasin : changez de magasin puis importez le même fichier.';m.style.color='var(--acc)'}}}
  catch(e){const m=$('#bkmsg');m.textContent='Fichier non valide';m.style.color='var(--dng)'}}
 function render(){S.emps.forEach(e=>e.name=String(e.name||'').toUpperCase());S.staff.people.forEach(q=>q.name=String(q.name||'').toUpperCase());if(S.emp)S.emp.groups.forEach(g=>{g.title=String(g.title||'').toUpperCase();g.people.forEach(q=>q.name=String(q.name||'').toUpperCase())});header();$('#tf').parentNode.style.display='';$('#tp').style.display='none';if(view==='plan')view='flat';if(eview==='one')eview='flat';$('#mi').className=mode==='int'?'on':'';$('#me').className=mode==='emp'?'on':'';$('#mc').className=mode==='leave'?'on':'';$('#mp').className=mode==='ep'?'on':'';$('#tn').style.display=mode==='ep'?'':'none';$('#leg').style.display=(mode==='emp'&&eview==='flat')?'flex':'none';$('.bar').style.display=mode==='ep'?'none':'';['pm','mo','nm'].forEach(i=>$('#'+i).style.display=mode==='leave'?'none':'');if(mode==='ep'){const V2={tf:'flat',tr:'rec',tn:'new'};for(const i in V2)$('#'+i).className=(V2[i]===epview?'on':'');$('#app').innerHTML=epview==='rec'?epRec():epview==='new'?crView():epFlat();if(epview!=='rec')epCalc();return}if(mode==='emp'){const EV={tf:'flat',tp:'one',tr:'rec'};for(const i in EV)$('#'+i).className=EV[i]===eview?'on':'';$('#app').innerHTML=eview==='flat'?emp():eview==='one'?emp1():empRec();if(eview!=='rec')sumStaff();return}if(mode==='leave'){const V3={tf:'flat',tr:'rec'};for(const i in V3)$('#'+i).className=V3[i]===lview?'on':'';$('#app').innerHTML=lview==='rec'?leaveRec():leaveView();if(lview!=='rec')sumLeave();return}const V={tf:'flat',tp:'plan',tr:'rec'};for(const i in V)$('#'+i).className=V[i]===view?'on':'';$('#app').innerHTML=view==='flat'?flat():view==='plan'?plan():recap();if(view==='flat')calcFlat();else if(view==='plan')calcAll()}
 function calcAll(){
