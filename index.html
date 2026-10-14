@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="21">
+<meta name="gt-version" content="22">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -733,7 +733,7 @@ function epFlat(){return epFlat2();
 function epRec(){let tot=0;
  const rows=epData().groups.map(g=>{let gt=0;const r=g.people.map(p=>{const w=epWeek(p);gt+=w;return `<tr><td>${esc(p.name)}</td><td><b>${fmt(w)}</b></td></tr>`}).join('');tot+=gt;
   return g.title?`<tr class="gr"><td colspan="2">${esc(g.title)}</td></tr>${r}<tr class="sub"><td>TOTAL ${esc(g.title)}</td><td>${fmt(gt)}</td></tr>`:r}).join('');
- return `<div class="card"><h3 style="margin:0 0 6px">Heures par semaine</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES / SEMAINE</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(tot)}</td></tr></tbody></table></div><p style="margin:10px 0 0"><button data-ep="copy">Copier le récapitulatif</button> <span id="cp3" class="mut"></span></p></div>`}
+ return `<div class="card"><h3 style="margin:0 0 6px">Heures par semaine</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES / SEMAINE</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(tot)}</td></tr></tbody></table></div><p style="margin:10px 0 0"><button data-xl="ep">📊 Export Excel</button> <span id="cp3" class="mut"></span></p></div>`}
 function epChange(t){
  if(t.dataset.addn){const v=t.value.trim();if(!v)return;const g=epData().groups.find(x=>x.id===t.dataset.addn);if(!g)return;const id='q'+Date.now();g.people.push({id,name:v.toUpperCase(),note:'',days:{}});save();render();const i=document.querySelector('input[data-addn="'+g.id+'"]');if(i)i.focus();return}
  if(t.dataset.g){const g=epData().groups.find(x=>x.id===t.dataset.g);if(g){g.title=(t.value.trim()||'Sans titre').toUpperCase();save()}return}
@@ -757,7 +757,7 @@ function leaveRec(){
  const L=S.leave[Y]||{};let tot=0,totN=0;
  const grp=(title,list)=>{let gd=0,gn=0;const r=list.map(p=>{const a=L[p.id]||[],n=a.length,d=a.reduce((s,x)=>s+dn(x),0);gd+=d;gn+=n;return `<tr><td>${esc(p.name)}</td><td>${n}</td><td><b>${d} j</b></td></tr>`}).join('');tot+=gd;totN+=gn;
   return `<tr class="gr"><td colspan="3">${title}</td></tr>${r}<tr class="sub"><td>TOTAL ${title}</td><td>${gn}</td><td>${gd} j</td></tr>`};
- return `<div class="card"><h3 style="margin:0 0 6px">Congés ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>PÉRIODES</th><th>JOURS</th></tr></thead><tbody>${grp('EMPLOYÉS',S.staff.people)}${grp('INTÉRIMS',S.emps)}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${totN}</td><td>${tot} j</td></tr></tbody></table></div><p class="mut" style="margin:8px 0 0">Jours calendaires, pour l’année affichée en haut.</p><p style="margin:10px 0 0"><button data-la="copyrec">Copier le récapitulatif</button> <span id="cp4" class="mut"></span></p></div>`}
+ return `<div class="card"><h3 style="margin:0 0 6px">Congés ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>PÉRIODES</th><th>JOURS</th></tr></thead><tbody>${grp('EMPLOYÉS',S.staff.people)}${grp('INTÉRIMS',S.emps)}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${totN}</td><td>${tot} j</td></tr></tbody></table></div><p class="mut" style="margin:8px 0 0">Jours calendaires, pour l’année affichée en haut.</p><p style="margin:10px 0 0"><button data-xl="cg">📊 Export Excel</button> <span id="cp4" class="mut"></span></p></div>`}
 
 // ===== EMP : CRÉATION (plannings enregistrables) =====
 var dlgCb=null;
@@ -789,7 +789,7 @@ function askConfirm(title,msg,ok,cb){dlgCb=cb;const old=$('#dlg');if(old)old.rem
 function crView(){
  const C=S.cre,cur=C.cur;
  const opts=C.list.slice().sort((x,y)=>x.name.localeCompare(y.name,'fr')).map(x=>`<option value="${x.id}"${C.curId===x.id?' selected':''}>${esc(x.name)}</option>`).join('');
- const top=`<div class="card"><div class="lrow" style="margin-top:0"><label>Plannings enregistrés <select data-cr="sel"><option value="" disabled hidden${C.curId?'':' selected'}>Choisir un planning…</option>${opts}</select></label><input type="text" data-cr="name" placeholder="Nom du planning" value="${esc(cur.name||'')}" style="flex:1;min-width:160px"></div><div class="lrow"><button class="pri" data-cr="save">💾 Enregistrer</button><button data-cr="new">Nouveau</button><button data-cr="print">🖨 Imprimer</button>${C.curId?'<button class="del" data-cr="del">Supprimer</button>':''}<span id="crmsg" class="mut">${crDirty()?'● modifications non enregistrées':''}</span></div></div>`;
+ const top=`<div class="card"><div class="lrow" style="margin-top:0"><label>Plannings enregistrés <select data-cr="sel"><option value="" disabled hidden${C.curId?'':' selected'}>Choisir un planning…</option>${opts}</select></label><input type="text" data-cr="name" placeholder="Nom du planning" value="${esc(cur.name||'')}" style="flex:1;min-width:160px"></div><div class="lrow"><button class="pri" data-cr="save">💾 Enregistrer</button><button data-cr="new">Nouveau</button><button data-cr="print">🖨 Imprimer</button><button data-xl="cr">📊 Export Excel</button>${C.curId?'<button class="del" data-cr="del">Supprimer</button>':''}<span id="crmsg" class="mut">${crDirty()?'● modifications non enregistrées':''}</span></div></div>`;
  return top+epFlat()}
 function crChange(t){const C=S.cre;
  if(t.dataset.cr==='name'){C.cur.name=t.value.trim();const bd=$('#crband');if(bd)bd.textContent=C.cur.name||'NOUVEAU PLANNING';save();crDirtyMsg();return}
@@ -852,8 +852,8 @@ function ferie(y,m,d){
   [[0,1,'Jour de l’An'],[4,1,'Fête du Travail'],[4,8,'Victoire 1945'],[6,14,'Fête nationale'],[7,15,'Assomption'],[10,1,'Toussaint'],[10,11,'Armistice'],[11,25,'Noël']].forEach(x=>{t[x[0]+'-'+x[1]]=x[2]})}
  return t[m+'-'+d]||''}
 
-// ===== EXPORT EXCEL (.xlsx) du tableau du mois : Intérim et Employés =====
-// Fichier Excel fabriqué sans librairie : feuille unique, texte en clair, en-têtes en gras.
+// ===== EXPORT EXCEL (.xlsx) : Intérim, Employés, Congés, EMP (récapitulatif et création) =====
+// Fichier Excel fabriqué sans librairie : une feuille, colonnes tracées, séparation épaisse entre les personnes.
 const XL={crc:null,
  crc32(u8){let t=XL.crc;if(!t){t=XL.crc=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}}let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=t[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0},
  zip(files){const enc=new TextEncoder(),parts=[],cd=[];let off=0;
@@ -868,39 +868,72 @@ const XL={crc:null,
   return new Blob([...parts,...cd,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})},
  col(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s},
  x(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')},
- // rows : tableau de lignes ; cellule = texte, nombre, ou {v, s} (s : 1 gras, 2 en-tête vert, 3 titre, 4 total)
- book(sheet,rows,merges,widths){
-  const sd=rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((c,ci)=>{if(c==null)return'';const ref=XL.col(ci)+(ri+1);if(c==='')return'<c r="'+ref+'" s="5"/>';const o=typeof c==='object'?c:{v:c},st=' s="'+(o.s||5)+'"';
-    return typeof o.v==='number'?'<c r="'+ref+'"'+st+'><v>'+o.v+'</v></c>':'<c r="'+ref+'"'+st+' t="inlineStr"><is><t xml:space="preserve">'+XL.x(o.v)+'</t></is></c>'}).join('')+'</row>').join('');
+ // Cellule : texte, nombre, '' (case vide encadrée) ou {v, s, L}. s : 1 jour (gras), 2 en-tête vert, 3 titre, 4 total, 5 normal, 9 texte long.
+ // L:true = trait épais à gauche (début d'une personne).
+ LEFT:{1:10,2:7,4:8,5:6,9:11},
+ book(sheet,rows,merges,widths,fr,fc){fr=fr==null?3:fr;fc=fc==null?1:fc;
+  const sd=rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((c,ci)=>{if(c==null)return'';const ref=XL.col(ci)+(ri+1);const o=typeof c==='object'?c:{v:c};let s=o.s||5;if(o.L&&XL.LEFT[s])s=XL.LEFT[s];
+    if(o.v===''||o.v==null)return'<c r="'+ref+'" s="'+s+'"/>';
+    return typeof o.v==='number'?'<c r="'+ref+'" s="'+s+'"><v>'+o.v+'</v></c>':'<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+XL.x(o.v)+'</t></is></c>'}).join('')+'</row>').join('');
   const cols=widths&&widths.length?'<cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols>':'';
   const mg=merges&&merges.length?'<mergeCells count="'+merges.length+'">'+merges.map(m=>'<mergeCell ref="'+m+'"/>').join('')+'</mergeCells>':'';
-  const ws='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+cols+'<sheetData>'+sd+'</sheetData>'+mg+'</worksheet>';
-  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF237A3B"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE2F0E4"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFBFBFBF"/></left><right style="thin"><color rgb="FFBFBFBF"/></right><top style="thin"><color rgb="FFBFBFBF"/></top><bottom style="thin"><color rgb="FFBFBFBF"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="6"><xf borderId="1" applyBorder="1" numFmtId="0" fontId="0" fillId="0" xfId="0"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf fontId="1" borderId="1" applyFont="1" applyBorder="1" numFmtId="0" fillId="0" xfId="0"><alignment vertical="center"/></xf><xf fontId="2" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" numFmtId="0" xfId="0"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf fontId="3" applyFont="1" numFmtId="0" fillId="0" borderId="0" xfId="0"/><xf fontId="1" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" numFmtId="0" xfId="0"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  const pane=fr||fc?'<pane'+(fc?' xSplit="'+fc+'"':'')+(fr?' ySplit="'+fr+'"':'')+' topLeftCell="'+XL.col(fc)+(fr+1)+'" activePane="'+(fr&&fc?'bottomRight':fr?'bottomLeft':'topRight')+'" state="frozen"/>':'';
+  const ws='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0">'+pane+'</sheetView></sheetViews>'+cols+'<sheetData>'+sd+'</sheetData>'+mg+'<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/></worksheet>';
+  const B1='<border><left style="thin"><color rgb="FF7F7F7F"/></left><right style="thin"><color rgb="FF7F7F7F"/></right><top style="thin"><color rgb="FF7F7F7F"/></top><bottom style="thin"><color rgb="FF7F7F7F"/></bottom><diagonal/></border>';
+  const B2='<border><left style="medium"><color rgb="FF000000"/></left><right style="thin"><color rgb="FF7F7F7F"/></right><top style="thin"><color rgb="FF7F7F7F"/></top><bottom style="thin"><color rgb="FF7F7F7F"/></bottom><diagonal/></border>';
+  const X=(f,fi,b,al)=>'<xf numFmtId="0" fontId="'+f+'" fillId="'+fi+'" borderId="'+b+'" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">'+al+'</xf>';
+  const C='<alignment horizontal="center" vertical="center" wrapText="1"/>',LA='<alignment horizontal="left" vertical="center" wrapText="1"/>',TA='<alignment horizontal="left" vertical="top" wrapText="1"/>';
+  const xfs=[X(0,0,1,C),X(1,0,1,LA),X(2,2,1,C),X(3,0,0,''),X(1,3,1,C),X(0,0,1,C),X(0,0,2,C),X(2,2,2,C),X(1,3,2,C),X(0,0,1,TA),X(1,0,2,LA),X(0,0,2,TA)];
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF237A3B"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE2F0E4"/></patternFill></fill></fills><borders count="3"><border><left/><right/><top/><bottom/><diagonal/></border>'+B1+B2+'</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="'+xfs.length+'">'+xfs.join('')+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
   return XL.zip([
    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
    ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
-   ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+XL.x(sheet.slice(0,31))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+   ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+XL.x(sheet.replace(/[\\\/?*\[\]:]/g,' ').slice(0,31))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
    ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
    ['xl/worksheets/sheet1.xml',ws],['xl/styles.xml',styles]])},
  save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}};
+const xlSafe=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').toUpperCase();
 const xlName=t=>'GESTIME-'+t+'-'+MOIS[M].toUpperCase()+'-'+Y+'-'+STORE.name+'.xlsx';
 function xlInterim(){const k=key(Y,M),n=dim(),E=S.emps,LVI=Object.fromEntries(E.map(q=>[q.id,leaveDays(q.id,Y,M)]));
- const rows=[[{v:'INTÉRIMS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...E.flatMap(e=>[{v:e.name,s:2},{v:'',s:2},{v:'',s:2},{v:'',s:2}])],[{v:'',s:2},...E.flatMap(()=>['ARRIVÉE','DÉPART','PAUSE','TOTAL'].map(v=>({v,s:4})))]];
+ const rows=[[{v:'INTÉRIMS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...E.flatMap(e=>[{v:e.name,s:2,L:1},{v:'',s:2},{v:'',s:2},{v:'',s:2}])],[{v:'',s:2},...E.flatMap(()=>['ARRIVÉE','DÉPART','PAUSE','TOTAL'].map((v,i)=>({v,s:4,L:!i})))]];
  const merges=['A2:A3'];E.forEach((e,i)=>merges.push(XL.col(1+i*4)+'2:'+XL.col(4+i*4)+'2'));
  for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay();rows.push([{v:JRS[wd]+' '+d,s:1},...E.flatMap(e=>{const r=recs(e.id,k)[d]||{},m=calc(r);
-   if(!r.a&&LVI[e.id].has(d))return['CP','','',''];return[r.a||'',r.d||'',r.p&&r.p!=='00:00'?r.p:'',m?fmt(m):'']})])}
- rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>[{v:'',s:4},{v:'',s:4},{v:'',s:4},{v:fmt(monthTotal(e.id,k)),s:4}])]);
- XL.save(XL.book('Intérims '+MOIS[M]+' '+Y,rows,merges,[10,...E.flatMap(()=>[9,9,8,9])]),xlName('INTERIMS'))}
-function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),L={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
- const rows=[[{v:'EMPLOYÉS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...P.map(p=>({v:p.name,s:2}))],[{v:'',s:2},...P.map(()=>({v:'',s:2}))]];
- for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay(),fr=ferie(Y,M,d);rows.push([{v:JRS[wd]+' '+d+(fr?' ('+fr+')':''),s:1},...P.map(p=>{let r=sdata(p.id).days[d]||{};if(!r.t&&LV[p.id].has(d))r={t:'cp'};if(!r.t||r.t==='x')return'';
-   return L[r.t]+((r.t==='hs'||r.t==='abs')&&r.h?' '+r.h:'')})])}
- rows.push([{v:'ACOMPTE €',s:1},...P.map(p=>{const D=sdata(p.id);return D.ac==null||D.ac===''?'':Number(D.ac)})]);
- rows.push([{v:'NOTE',s:1},...P.map(p=>sdata(p.id).note||'')]);
- rows.push([{v:'TOTAL',s:4},...P.map(p=>{const x=st(p);return{v:'HS '+fmt(x.hs)+' · Congés '+x.cp+' j · Maladie '+x.ma+' j · Abs '+abTxt(x.ab,x.abh),s:4}})]);
- XL.save(XL.book('Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[24,...P.map(()=>18)]),xlName('EMPLOYES'))}
-document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('button[data-xl]');if(!b)return;
- try{b.dataset.xl==='int'?xlInterim():xlEmployes();const m=b.nextElementSibling;if(m)m.textContent='Fichier Excel créé ✓'}catch(e){console.error(e);const m=b.nextElementSibling;if(m)m.textContent='Export impossible'}});
+   if(!r.a&&LVI[e.id].has(d))return[{v:'CP',L:1},'','',''];return[{v:r.a||'',L:1},r.d||'',r.p&&r.p!=='00:00'?r.p:'',m?fmt(m):'']})])}
+ rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>[{v:'',s:4,L:1},{v:'',s:4},{v:'',s:4},{v:fmt(monthTotal(e.id,k)),s:4}])]);
+ XL.save(XL.book('Intérims '+MOIS[M]+' '+Y,rows,merges,[11,...E.flatMap(()=>[9,9,8,9])]),xlName('INTERIMS'))}
+function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),Lb={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
+ const rows=[[{v:'EMPLOYÉS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...P.map(p=>({v:p.name,s:2,L:1}))],[{v:'',s:2},...P.map(()=>({v:'',s:2,L:1}))]];
+ for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay(),fr=ferie(Y,M,d);rows.push([{v:JRS[wd]+' '+d+(fr?' ('+fr+')':''),s:1},...P.map(p=>{let r=sdata(p.id).days[d]||{};if(!r.t&&LV[p.id].has(d))r={t:'cp'};if(!r.t||r.t==='x')return{v:'',L:1};
+   return{v:Lb[r.t]+((r.t==='hs'||r.t==='abs')&&r.h?' '+r.h:''),L:1}})])}
+ rows.push([{v:'ACOMPTE €',s:1},...P.map(p=>{const D=sdata(p.id);return{v:D.ac==null||D.ac===''?'':Number(D.ac),L:1}})]);
+ rows.push([{v:'NOTE',s:1},...P.map(p=>({v:sdata(p.id).note||'',s:9,L:1}))]);
+ rows.push([{v:'TOTAL',s:4},...P.map(p=>{const x=st(p);return{v:'HS '+fmt(x.hs)+'\nCongés '+x.cp+' j\nMaladie '+x.ma+' j\nAbs '+abTxt(x.ab,x.abh),s:4,L:1}})]);
+ XL.save(XL.book('Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[26,...P.map(()=>18)]),xlName('EMPLOYES'))}
+function xlConges(){const L=S.leave[Y]||{},G=[['EMPLOYÉS',S.staff.people],['INTÉRIMS',S.emps]],cols=[];
+ G.forEach(g=>g[1].forEach((p,i)=>cols.push({p,g:g[0],first:i===0})));
+ const r2=[{v:'MOIS',s:2}],merges=['A2:A3'];let c=1;G.forEach(g=>{if(!g[1].length)return;r2.push({v:g[0],s:2,L:1});for(let i=1;i<g[1].length;i++)r2.push({v:'',s:2});if(g[1].length>1)merges.push(XL.col(c)+'2:'+XL.col(c+g[1].length-1)+'2');c+=g[1].length});
+ const rows=[[{v:'CONGÉS '+Y+' — '+STORE.name,s:3}],r2,[{v:'',s:2},...cols.map(x=>({v:x.p.name,s:4,L:1}))]];
+ for(let m=0;m<12;m++){const mm=String(m+1).padStart(2,'0');rows.push([{v:MOIS[m].toUpperCase(),s:1},...cols.map(x=>{const arr=(L[x.p.id]||[]).filter(z=>z.a&&z.a.slice(0,7)===Y+'-'+mm).sort((u,v)=>u.a<v.a?-1:1);
+   return{v:arr.map(z=>'Du '+fd(z.a)+' au '+fd(z.b)+(dn(z)?' ('+dn(z)+' j)':'')).join('\n'),s:9,L:1}})])}
+ rows.push([{v:'TOTAL '+Y,s:4},...cols.map(x=>{const a=L[x.p.id]||[];return{v:a.reduce((s,z)=>s+dn(z),0)+' j',s:4,L:1}})]);
+ XL.save(XL.book('Congés '+Y,rows,merges,[13,...cols.map(()=>22)]),'GESTIME-CONGES-'+Y+'-'+STORE.name+'.xlsx')}
+function xlEmp(title,file){const D=epData(),G=D.groups.filter(g=>g.people.length),DJ=['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI','DIMANCHE'];
+ const P=G.flatMap(g=>g.people),seg=(a,b)=>a&&b?a+' – '+b:'';
+ const r2=[{v:'JOUR',s:2}],r3=[{v:'',s:2}],r4=[{v:'',s:2}],merges=['A2:A4'];let c=1;
+ G.forEach(g=>{const w=g.people.length*4;r2.push({v:g.title||'',s:2,L:1});for(let i=1;i<w;i++)r2.push({v:'',s:2});merges.push(XL.col(c)+'2:'+XL.col(c+w-1)+'2');
+  g.people.forEach(p=>{r3.push({v:p.name,s:2,L:1},{v:'',s:2},{v:'',s:2},{v:'',s:2});merges.push(XL.col(c)+'3:'+XL.col(c+3)+'3');
+   ['CRÉNEAU 1','CRÉNEAU 2','PAUSE','TOTAL'].forEach((v,i)=>r4.push({v,s:4,L:!i}));c+=4})});
+ const rows=[[{v:title,s:3}],r2,r3,r4];
+ for(let d=0;d<7;d++)rows.push([{v:DJ[d],s:1},...P.flatMap(p=>{const r=p.days[d]||{},m=epDay(r);if(!m)return[{v:'REPOS',L:1},'','',''];
+   return[{v:seg(r.a1,r.b1),L:1},seg(r.a2,r.b2),r.p&&r.p!=='00:00'?r.p:'',fmt(m)]})]);
+ rows.push([{v:'TOTAL SEMAINE',s:4},...P.flatMap(p=>[{v:'',s:4,L:1},{v:'',s:4},{v:'',s:4},{v:fmt(epWeek(p)),s:4}])]);
+ XL.save(XL.book(title.slice(0,31),rows,merges,[16,...P.flatMap(()=>[14,14,8,9])],4,1),file)}
+function xlMsg(b,t){let m=b.nextElementSibling;if(!m||m.tagName!=='SPAN')m=document.getElementById('crmsg');if(m)m.textContent=t}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('button[data-xl]');if(!b)return;const k=b.dataset.xl;
+ try{if(k==='int')xlInterim();else if(k==='emp')xlEmployes();else if(k==='cg')xlConges();
+  else if(k==='ep')xlEmp('EMP — semaine type — '+STORE.name,'GESTIME-EMP-'+STORE.name+'.xlsx');
+  else if(k==='cr'){const n=(S.cre&&S.cre.cur&&S.cre.cur.name)||'PLANNING';xlEmp('EMP — '+n+' — '+STORE.name,'GESTIME-EMP-'+xlSafe(n)+'-'+STORE.name+'.xlsx')}
+  xlMsg(b,'Fichier Excel créé ✓')}catch(e){console.error(e);xlMsg(b,'Export impossible')}});
 
 // ===== CONGÉS -> EMPLOYÉS : les périodes posées dans l'onglet Congés apparaissent en « Congé » =====
 function leaveDays(pid,y,m){
