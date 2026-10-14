@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="25">
+<meta name="gt-version" content="26">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1191,16 +1191,19 @@ boot();
 (function(){if(!window.api||!window.api.updateCheck)return;
  const U=()=>window.SYNC&&window.SYNC.updateUrl,m=t=>{const e=document.getElementById('upm');if(e)e.textContent=t},g=document.getElementById('gr');
  const bl=document.getElementById('updb');if(bl)bl.style.display='';
- let seen=false;function flag(on){on=on&&!seen;if(g)g.classList.toggle('upd',on);const u=document.getElementById('upb');if(u)u.classList.toggle('upd',on)}
+ let seenV=0,newV=0;function flag(on){on=on&&newV>seenV;if(g)g.classList.toggle('upd',on);const u=document.getElementById('upb');if(u)u.classList.toggle('upd',on)}
  async function ver(){try{const i=await window.api.updateInfo();m('Version installée : '+i.version);const r=document.getElementById('upr');if(r)r.style.display=''}catch(e){}}
  async function chk(silent){const r=await window.api.updateCheck(U());
-  if(r.status==='new'){flag(true);m('🔔 Nouvelle version disponible ('+r.remote+'), vous avez la '+r.version+'.'+(r.note?' '+r.note:''))}
+  if(r.status==='new'){newV=r.remote;flag(true);m('🔔 Nouvelle version disponible ('+r.remote+'), vous avez la '+r.version+'.'+(r.note?' '+r.note:''))}
   else if(!silent){if(r.status==='none')m('✓ Vous avez la dernière version ('+r.version+').');else if(r.status==='noconfig')m('Adresse des mises à jour non réglée (voir LISEZ-MOI-MISE-A-JOUR.txt).');else m('⚠️ Impossible de vérifier : '+(r.msg||'pas de connexion'))}
   return r}
  document.addEventListener('click',async ev=>{const b=ev.target.closest&&ev.target.closest('button');if(!b)return;
   if(b.id==='gr')ver();
-  if(b.id==='upb'){seen=true;flag(false);b.disabled=true;m('Recherche…');try{const r=await chk(false);if(r.status==='new'){m('Téléchargement…');const a=await window.api.updateApply(U());if(a.status==='done')m('✓ Mise à jour installée, redémarrage…');else m('⚠️ '+(a.msg||'échec'))}}catch(e){m('⚠️ '+e.message)}b.disabled=false}
+  if(b.id==='upb'){seenV=newV;flag(false);b.disabled=true;m('Recherche…');try{const r=await chk(false);if(r.status==='new'){m('Téléchargement…');const a=await window.api.updateApply(U());if(a.status==='done')m('✓ Mise à jour installée, redémarrage…');else m('⚠️ '+(a.msg||'échec'))}}catch(e){m('⚠️ '+e.message)}b.disabled=false}
   if(b.id==='upr'){if(confirm('Revenir à la version fournie par l’installateur ? Vos données ne sont pas touchées.'))window.api.updateReset()}});
- setTimeout(()=>{chk(true).catch(()=>{})},4000);
+ // Vérifie au démarrage, puis toutes les 10 minutes et quand on revient sur la fenêtre (au plus une fois par minute) :
+ // la pastille « 1 » apparaît même si le logiciel est resté ouvert pendant la publication.
+ let last=0;const auto=()=>{if(Date.now()-last<60000)return;last=Date.now();chk(true).catch(()=>{})};
+ setTimeout(auto,4000);setInterval(()=>{last=0;auto()},600000);window.addEventListener('focus',auto);document.addEventListener('visibilitychange',()=>{if(!document.hidden)auto()});
 })();
 </script></body></html>
