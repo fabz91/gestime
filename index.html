@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="18">
+<meta name="gt-version" content="19">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -518,8 +518,8 @@ function bkInfo(){const e=$('#bkmsg');if(!e)return;const f=$('#bkf');if(f&&windo
  if(!t){e.textContent='⚠️ Aucune sauvegarde exportée pour le moment';e.style.color='var(--dng)';return}
  const j=Math.floor((Date.now()-t)/864e5);e.textContent='Dernière sauvegarde : '+(j===0?"aujourd'hui":'il y a '+j+' j');e.style.color=j>30?'var(--dng)':''}
 async function doExport(){const j=JSON.stringify(S,null,1);
- try{if(window.api){if(!(await window.api.exportData(j,STORE.id)))return}
- else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='horaires-'+STORE.id+'-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove()}
+ // Nom du fichier : GESTIME-AAAA-MM-JJ.json (PC et navigateur : Windows propose l'emplacement)
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='GESTIME-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
  S.lastBackup=Date.now();save();bkInfo()}catch(e){}}
 function applyImport(txt){try{const o=JSON.parse(txt);if(!o||!o.emps||!o.staff||!o.data)throw 0;S=o;if(!S.leave)S.leave={};epMig();crInit();epPauseAll();save();cur=S.emps[0]&&S.emps[0].id;ecur=null;ed=null;render()}
  catch(e){const m=$('#bkmsg');m.textContent='Fichier non valide';m.style.color='var(--dng)'}}
