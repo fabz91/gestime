@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="20">
+<meta name="gt-version" content="21">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -418,7 +418,7 @@ function recap(){
   return `<tr><td>${esc(e.name)}</td><td><b>${fmt(m)}</b></td></tr>`}).join('');
  return `<div class="card"><h3 style="margin:0 0 6px">${MOIS[M]} ${Y}</h3><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES</th></tr></thead><tbody>${body}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(tot)}</td></tr></tbody></table>
  
- <p style="margin:10px 0 0"><button data-act="copy">Copier le récapitulatif</button> <span id="cp" class="mut"></span></p></div>`}
+ <p style="margin:10px 0 0"><button data-xl="int">📊 Export Excel</button> <span id="cp" class="mut"></span></p></div>`}
 function sdata(pid,create){const k=key(Y,M);if(create){S.staff.data[k]=S.staff.data[k]||{};return S.staff.data[k][pid]=S.staff.data[k][pid]||{days:{}}}return((S.staff.data[k]||{})[pid])||{days:{}}}
 function emp(){
  const P=S.staff.people.filter(p=>!p.cg),n=dim(),td=new Date(),LV=Object.fromEntries(S.staff.people.map(q=>[q.id,leaveDays(q.id,Y,M)])),O=[['','—'],['hs','Heures sup'],['cp','Congé'],['mal','Maladie'],['abs','Absent']];
@@ -452,7 +452,7 @@ function empRec(){
  const rows=S.staff.people.filter(p=>!p.cg).map(p=>{const x=st(p);T.hs+=x.hs;T.cp+=x.cp;T.ma+=x.ma;T.ab+=x.ab;T.abh+=x.abh;
   return `<tr><td>${esc(p.name)}</td><td><b>${fmt(x.hs)}</b></td><td>${x.cp} j</td><td>${x.ma} j</td><td>${abTxt(x.ab,x.abh)}</td></tr>`}).join('');
  return `<div class="card"><h3 style="margin:0 0 6px">${MOIS[M]} ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES SUP</th><th>CONGÉ</th><th>MALADIE</th><th>ABSENT</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(T.hs)}</td><td>${T.cp} j</td><td>${T.ma} j</td><td>${abTxt(T.ab,T.abh)}</td></tr></tbody></table></div>
- <p style="margin:10px 0 0"><button data-pa="copy">Copier le récapitulatif</button> <span id="cp2" class="mut"></span></p></div>`}
+ <p style="margin:10px 0 0"><button data-xl="emp">📊 Export Excel</button> <span id="cp2" class="mut"></span></p></div>`}
 function sumStaff(){S.staff.people.forEach(p=>{let hs=0,a=0,c=0,ah=0;Object.values(effDays(p.id)).forEach(r=>{if(r.t==='hs')hs+=mins(r.h);else if(r.t==='cp')c++;else if(r.t==='abs'&&r.h)ah+=mins(r.h);else if(r.t)a++});const e=$('[data-fs="'+p.id+'"]');if(e)e.innerHTML='<span class="tfl h">HS '+fmt(hs)+'</span><span class="tfl c">Congés '+c+' j</span><span class="tfl a">Abs '+abTxt(a,ah)+'</span>'})}
 const addD=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 function lvAdd(pid,iso){const all=()=>Object.values(S.leave||{}).map(L=>L[pid]||[]).flat();
@@ -851,6 +851,56 @@ function ferie(y,m,d){
   add(1,'Lundi de Pâques');add(39,'Ascension');add(50,'Lundi de Pentecôte');
   [[0,1,'Jour de l’An'],[4,1,'Fête du Travail'],[4,8,'Victoire 1945'],[6,14,'Fête nationale'],[7,15,'Assomption'],[10,1,'Toussaint'],[10,11,'Armistice'],[11,25,'Noël']].forEach(x=>{t[x[0]+'-'+x[1]]=x[2]})}
  return t[m+'-'+d]||''}
+
+// ===== EXPORT EXCEL (.xlsx) du tableau du mois : Intérim et Employés =====
+// Fichier Excel fabriqué sans librairie : feuille unique, texte en clair, en-têtes en gras.
+const XL={crc:null,
+ crc32(u8){let t=XL.crc;if(!t){t=XL.crc=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}}let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=t[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0},
+ zip(files){const enc=new TextEncoder(),parts=[],cd=[];let off=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  for(const[name,txt]of files){const nm=enc.encode(name),data=enc.encode(txt),crc=XL.crc32(data);
+   const lh=[...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(nm.length),...u16(0)];
+   parts.push(new Uint8Array(lh),nm,data);
+   cd.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nm);
+   off+=lh.length+nm.length+data.length}
+  const cdLen=cd.reduce((s,p)=>s+p.length,0);
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdLen),...u32(off),...u16(0)]);
+  return new Blob([...parts,...cd,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})},
+ col(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s},
+ x(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')},
+ // rows : tableau de lignes ; cellule = texte, nombre, ou {v, s} (s : 1 gras, 2 en-tête vert, 3 titre, 4 total)
+ book(sheet,rows,merges,widths){
+  const sd=rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((c,ci)=>{if(c==null)return'';const ref=XL.col(ci)+(ri+1);if(c==='')return'<c r="'+ref+'" s="5"/>';const o=typeof c==='object'?c:{v:c},st=' s="'+(o.s||5)+'"';
+    return typeof o.v==='number'?'<c r="'+ref+'"'+st+'><v>'+o.v+'</v></c>':'<c r="'+ref+'"'+st+' t="inlineStr"><is><t xml:space="preserve">'+XL.x(o.v)+'</t></is></c>'}).join('')+'</row>').join('');
+  const cols=widths&&widths.length?'<cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols>':'';
+  const mg=merges&&merges.length?'<mergeCells count="'+merges.length+'">'+merges.map(m=>'<mergeCell ref="'+m+'"/>').join('')+'</mergeCells>':'';
+  const ws='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+cols+'<sheetData>'+sd+'</sheetData>'+mg+'</worksheet>';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF237A3B"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE2F0E4"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFBFBFBF"/></left><right style="thin"><color rgb="FFBFBFBF"/></right><top style="thin"><color rgb="FFBFBFBF"/></top><bottom style="thin"><color rgb="FFBFBFBF"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="6"><xf borderId="1" applyBorder="1" numFmtId="0" fontId="0" fillId="0" xfId="0"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf fontId="1" borderId="1" applyFont="1" applyBorder="1" numFmtId="0" fillId="0" xfId="0"><alignment vertical="center"/></xf><xf fontId="2" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" numFmtId="0" xfId="0"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf fontId="3" applyFont="1" numFmtId="0" fillId="0" borderId="0" xfId="0"/><xf fontId="1" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" numFmtId="0" xfId="0"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  return XL.zip([
+   ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+   ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+   ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+XL.x(sheet.slice(0,31))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+   ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+   ['xl/worksheets/sheet1.xml',ws],['xl/styles.xml',styles]])},
+ save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}};
+const xlName=t=>'GESTIME-'+t+'-'+MOIS[M].toUpperCase()+'-'+Y+'-'+STORE.name+'.xlsx';
+function xlInterim(){const k=key(Y,M),n=dim(),E=S.emps,LVI=Object.fromEntries(E.map(q=>[q.id,leaveDays(q.id,Y,M)]));
+ const rows=[[{v:'INTÉRIMS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...E.flatMap(e=>[{v:e.name,s:2},{v:'',s:2},{v:'',s:2},{v:'',s:2}])],[{v:'',s:2},...E.flatMap(()=>['ARRIVÉE','DÉPART','PAUSE','TOTAL'].map(v=>({v,s:4})))]];
+ const merges=['A2:A3'];E.forEach((e,i)=>merges.push(XL.col(1+i*4)+'2:'+XL.col(4+i*4)+'2'));
+ for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay();rows.push([{v:JRS[wd]+' '+d,s:1},...E.flatMap(e=>{const r=recs(e.id,k)[d]||{},m=calc(r);
+   if(!r.a&&LVI[e.id].has(d))return['CP','','',''];return[r.a||'',r.d||'',r.p&&r.p!=='00:00'?r.p:'',m?fmt(m):'']})])}
+ rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>[{v:'',s:4},{v:'',s:4},{v:'',s:4},{v:fmt(monthTotal(e.id,k)),s:4}])]);
+ XL.save(XL.book('Intérims '+MOIS[M]+' '+Y,rows,merges,[10,...E.flatMap(()=>[9,9,8,9])]),xlName('INTERIMS'))}
+function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),L={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
+ const rows=[[{v:'EMPLOYÉS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...P.map(p=>({v:p.name,s:2}))],[{v:'',s:2},...P.map(()=>({v:'',s:2}))]];
+ for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay(),fr=ferie(Y,M,d);rows.push([{v:JRS[wd]+' '+d+(fr?' ('+fr+')':''),s:1},...P.map(p=>{let r=sdata(p.id).days[d]||{};if(!r.t&&LV[p.id].has(d))r={t:'cp'};if(!r.t||r.t==='x')return'';
+   return L[r.t]+((r.t==='hs'||r.t==='abs')&&r.h?' '+r.h:'')})])}
+ rows.push([{v:'ACOMPTE €',s:1},...P.map(p=>{const D=sdata(p.id);return D.ac==null||D.ac===''?'':Number(D.ac)})]);
+ rows.push([{v:'NOTE',s:1},...P.map(p=>sdata(p.id).note||'')]);
+ rows.push([{v:'TOTAL',s:4},...P.map(p=>{const x=st(p);return{v:'HS '+fmt(x.hs)+' · Congés '+x.cp+' j · Maladie '+x.ma+' j · Abs '+abTxt(x.ab,x.abh),s:4}})]);
+ XL.save(XL.book('Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[24,...P.map(()=>18)]),xlName('EMPLOYES'))}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('button[data-xl]');if(!b)return;
+ try{b.dataset.xl==='int'?xlInterim():xlEmployes();const m=b.nextElementSibling;if(m)m.textContent='Fichier Excel créé ✓'}catch(e){console.error(e);const m=b.nextElementSibling;if(m)m.textContent='Export impossible'}});
 
 // ===== CONGÉS -> EMPLOYÉS : les périodes posées dans l'onglet Congés apparaissent en « Congé » =====
 function leaveDays(pid,y,m){
