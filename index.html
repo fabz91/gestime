@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="24">
+<meta name="gt-version" content="25">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -78,6 +78,10 @@ input.selall[type=time]::-webkit-datetime-edit-hour-field:focus,input.selall[typ
 .chip2{width:100%;text-align:left;font-size:12px;line-height:1.3;padding:3px 6px;border-radius:8px;background:var(--accbg)}
 .chip2.on{outline:2px solid var(--acc)}
 .lrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}.lrow label{display:flex;gap:4px;align-items:center}
+/* Création : le champ « Nom du planning » s'arrête un peu après « Supprimer » */
+.crw{display:inline-flex;flex-direction:column;max-width:100%}
+.crw .crb{position:relative;padding-right:40px}
+.crw #crmsg{position:absolute;left:100%;white-space:nowrap}
 .pri{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
 .lv{min-width:180px}
 .edp{display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:8px;background:var(--wk);border:2px solid var(--acc);scroll-margin:170px 0 70px}
@@ -797,7 +801,7 @@ function askConfirm(title,msg,ok,cb){dlgCb=cb;const old=$('#dlg');if(old)old.rem
 function crView(){
  const C=S.cre,cur=C.cur;
  const opts=C.list.slice().sort((x,y)=>x.name.localeCompare(y.name,'fr')).map(x=>`<option value="${x.id}"${C.curId===x.id?' selected':''}>${esc(x.name)}</option>`).join('');
- const top=`<div class="card"><div class="lrow" style="margin-top:0"><label>Plannings enregistrés <select data-cr="sel"><option value="" disabled hidden${C.curId?'':' selected'}>Choisir un planning…</option>${opts}</select></label><input type="text" data-cr="name" placeholder="Nom du planning" value="${esc(cur.name||'')}" style="flex:1;min-width:160px"></div><div class="lrow"><button class="pri" data-cr="save">💾 Enregistrer</button><button data-cr="new">Nouveau</button><button data-cr="print">🖨 Imprimer</button><button data-xl="cr">📊 Export Excel</button>${C.curId?'<button class="del" data-cr="del">Supprimer</button>':''}<span id="crmsg" class="mut">${crDirty()?'● modifications non enregistrées':''}</span></div></div>`;
+ const top=`<div class="card"><div class="crw"><div class="lrow" style="margin-top:0"><label>Plannings enregistrés <select data-cr="sel"><option value="" disabled hidden${C.curId?'':' selected'}>Choisir un planning…</option>${opts}</select></label><input type="text" data-cr="name" placeholder="Nom du planning" value="${esc(cur.name||'')}" style="flex:1;min-width:160px"></div><div class="lrow crb"><button class="pri" data-cr="save">💾 Enregistrer</button><button data-cr="new">Nouveau</button><button data-cr="print">🖨 Imprimer</button><button data-xl="cr">📊 Export Excel</button>${C.curId?'<button class="del" data-cr="del">Supprimer</button>':''}<span id="crmsg" class="mut">${crDirty()?'● modifications non enregistrées':''}</span></div></div></div>`;
  return top+epFlat()}
 function crChange(t){const C=S.cre;
  if(t.dataset.cr==='name'){C.cur.name=t.value.trim();const bd=$('#crband');if(bd)bd.textContent=C.cur.name||'NOUVEAU PLANNING';save();crDirtyMsg();return}
