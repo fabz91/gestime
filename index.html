@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="23">
+<meta name="gt-version" content="24">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -168,6 +168,14 @@ input[data-f=name],.nmf,#nm2{text-transform:uppercase}
 .emp2 td.pa{border-top:1px solid var(--line);border-left:1px dashed var(--line);background:var(--we)}
 .emp2 tbody td.d.mo{height:76px;vertical-align:middle}
 #prt{display:none}
+#prt.xp h2{font-size:18px;text-align:left;margin:0 0 6px}
+#prt.xp table{table-layout:fixed;border-collapse:collapse;margin:0}
+#prt.xp td{border:1px solid #555;padding:2px 4px;font-size:12px;line-height:1.25;white-space:normal;overflow:hidden;text-align:center;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#prt.xp td.x1,#prt.xp td.x6{text-align:left;font-weight:700}
+#prt.xp td.x2{background:#237a3b;color:#fff;font-weight:700}
+#prt.xp td.x4{background:#e2f0e4;font-weight:700}
+#prt.xp td.x6{background:#e2f0e4}
+#prt.xp td.x9{text-align:left;vertical-align:top}
 #prt h2{margin:0 0 12px;font-size:1.5em;text-align:center}
 #prt table{border-collapse:collapse;border-spacing:0;table-layout:fixed;margin:0 auto}
 #prt th,#prt td{padding:3px 4px;text-align:center;vertical-align:middle;font-size:inherit;line-height:1.32;white-space:nowrap;overflow:hidden}
@@ -418,7 +426,7 @@ function recap(){
   return `<tr><td>${esc(e.name)}</td><td><b>${fmt(m)}</b></td></tr>`}).join('');
  return `<div class="card"><h3 style="margin:0 0 6px">${MOIS[M]} ${Y}</h3><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES</th></tr></thead><tbody>${body}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(tot)}</td></tr></tbody></table>
  
- <p style="margin:10px 0 0"><button data-xl="int">📊 Export Excel</button> <span id="cp" class="mut"></span></p></div>`}
+ <p style="margin:10px 0 0"><button data-xl="int">📊 Export Excel</button> <span id="cp" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="int">🖨 Imprimer</button></p></div>`}
 function sdata(pid,create){const k=key(Y,M);if(create){S.staff.data[k]=S.staff.data[k]||{};return S.staff.data[k][pid]=S.staff.data[k][pid]||{days:{}}}return((S.staff.data[k]||{})[pid])||{days:{}}}
 function emp(){
  const P=S.staff.people.filter(p=>!p.cg),n=dim(),td=new Date(),LV=Object.fromEntries(S.staff.people.map(q=>[q.id,leaveDays(q.id,Y,M)])),O=[['','—'],['hs','Heures sup'],['cp','Congé'],['mal','Maladie'],['abs','Absent']];
@@ -452,7 +460,7 @@ function empRec(){
  const rows=S.staff.people.filter(p=>!p.cg).map(p=>{const x=st(p);T.hs+=x.hs;T.cp+=x.cp;T.ma+=x.ma;T.ab+=x.ab;T.abh+=x.abh;
   return `<tr><td>${esc(p.name)}</td><td><b>${fmt(x.hs)}</b></td><td>${x.cp} j</td><td>${x.ma} j</td><td>${abTxt(x.ab,x.abh)}</td></tr>`}).join('');
  return `<div class="card"><h3 style="margin:0 0 6px">${MOIS[M]} ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES SUP</th><th>CONGÉ</th><th>MALADIE</th><th>ABSENT</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(T.hs)}</td><td>${T.cp} j</td><td>${T.ma} j</td><td>${abTxt(T.ab,T.abh)}</td></tr></tbody></table></div>
- <p style="margin:10px 0 0"><button data-xl="emp">📊 Export Excel</button> <span id="cp2" class="mut"></span></p></div>`}
+ <p style="margin:10px 0 0"><button data-xl="emp">📊 Export Excel</button> <span id="cp2" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="emp">🖨 Imprimer</button></p></div>`}
 function sumStaff(){S.staff.people.forEach(p=>{let hs=0,a=0,c=0,ah=0;Object.values(effDays(p.id)).forEach(r=>{if(r.t==='hs')hs+=mins(r.h);else if(r.t==='cp')c++;else if(r.t==='abs'&&r.h)ah+=mins(r.h);else if(r.t)a++});const e=$('[data-fs="'+p.id+'"]');if(e)e.innerHTML='<span class="tfl h">HS '+fmt(hs)+'</span><span class="tfl c">Congés '+c+' j</span><span class="tfl a">Abs '+abTxt(a,ah)+'</span>'})}
 const addD=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 function lvAdd(pid,iso){const all=()=>Object.values(S.leave||{}).map(L=>L[pid]||[]).flat();
@@ -733,7 +741,7 @@ function epFlat(){return epFlat2();
 function epRec(){let tot=0;
  const rows=epData().groups.map(g=>{let gt=0;const r=g.people.map(p=>{const w=epWeek(p);gt+=w;return `<tr><td>${esc(p.name)}</td><td><b>${fmt(w)}</b></td></tr>`}).join('');tot+=gt;
   return g.title?`<tr class="gr"><td colspan="2">${esc(g.title)}</td></tr>${r}<tr class="sub"><td>TOTAL ${esc(g.title)}</td><td>${fmt(gt)}</td></tr>`:r}).join('');
- return `<div class="card"><h3 style="margin:0 0 6px">Heures par semaine</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES / SEMAINE</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(tot)}</td></tr></tbody></table></div><p style="margin:10px 0 0"><button data-xl="ep">📊 Export Excel</button> <span id="cp3" class="mut"></span></p></div>`}
+ return `<div class="card"><h3 style="margin:0 0 6px">Heures par semaine</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES / SEMAINE</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(tot)}</td></tr></tbody></table></div><p style="margin:10px 0 0"><button data-xl="ep">📊 Export Excel</button> <span id="cp3" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="ep">🖨 Imprimer</button></p></div>`}
 function epChange(t){
  if(t.dataset.addn){const v=t.value.trim();if(!v)return;const g=epData().groups.find(x=>x.id===t.dataset.addn);if(!g)return;const id='q'+Date.now();g.people.push({id,name:v.toUpperCase(),note:'',days:{}});save();render();const i=document.querySelector('input[data-addn="'+g.id+'"]');if(i)i.focus();return}
  if(t.dataset.g){const g=epData().groups.find(x=>x.id===t.dataset.g);if(g){g.title=(t.value.trim()||'Sans titre').toUpperCase();save()}return}
@@ -757,7 +765,7 @@ function leaveRec(){
  const L=S.leave[Y]||{};let tot=0,totN=0;
  const grp=(title,list)=>{let gd=0,gn=0;const r=list.map(p=>{const a=L[p.id]||[],n=a.length,d=a.reduce((s,x)=>s+dn(x),0);gd+=d;gn+=n;return `<tr><td>${esc(p.name)}</td><td>${n}</td><td><b>${d} j</b></td></tr>`}).join('');tot+=gd;totN+=gn;
   return `<tr class="gr"><td colspan="3">${title}</td></tr>${r}<tr class="sub"><td>TOTAL ${title}</td><td>${gn}</td><td>${gd} j</td></tr>`};
- return `<div class="card"><h3 style="margin:0 0 6px">Congés ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>PÉRIODES</th><th>JOURS</th></tr></thead><tbody>${grp('EMPLOYÉS',S.staff.people)}${grp('INTÉRIMS',S.emps)}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${totN}</td><td>${tot} j</td></tr></tbody></table></div><p class="mut" style="margin:8px 0 0">Jours calendaires, pour l’année affichée en haut.</p><p style="margin:10px 0 0"><button data-xl="cge">📊 Export Excel Employés</button> <button data-xl="cgi">📊 Export Excel Intérims</button> <span id="cp4" class="mut"></span></p></div>`}
+ return `<div class="card"><h3 style="margin:0 0 6px">Congés ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>PÉRIODES</th><th>JOURS</th></tr></thead><tbody>${grp('EMPLOYÉS',S.staff.people)}${grp('INTÉRIMS',S.emps)}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${totN}</td><td>${tot} j</td></tr></tbody></table></div><p class="mut" style="margin:8px 0 0">Jours calendaires, pour l’année affichée en haut.</p><p style="margin:10px 0 0"><button data-xl="cge">📊 Export Excel Employés</button> <button data-xl="cgi">📊 Export Excel Intérims</button> <span id="cp4" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="cge">🖨 Imprimer Employés</button> <button data-xp="cgi">🖨 Imprimer Intérims</button> <span class="mut"></span></p></div>`}
 
 // ===== EMP : CRÉATION (plannings enregistrables) =====
 var dlgCb=null;
@@ -789,7 +797,7 @@ function askConfirm(title,msg,ok,cb){dlgCb=cb;const old=$('#dlg');if(old)old.rem
 function crView(){
  const C=S.cre,cur=C.cur;
  const opts=C.list.slice().sort((x,y)=>x.name.localeCompare(y.name,'fr')).map(x=>`<option value="${x.id}"${C.curId===x.id?' selected':''}>${esc(x.name)}</option>`).join('');
- const top=`<div class="card"><div class="lrow" style="margin-top:0"><label>Plannings enregistrés <select data-cr="sel"><option value="" disabled hidden${C.curId?'':' selected'}>Choisir un planning…</option>${opts}</select></label><input type="text" data-cr="name" placeholder="Nom du planning" value="${esc(cur.name||'')}" style="flex:1;min-width:160px"></div><div class="lrow"><button class="pri" data-cr="save">💾 Enregistrer</button><button data-cr="new">Nouveau</button><button data-cr="print">🖨 Imprimer</button><button data-xl="cre">📊 Export Excel Employés</button><button data-xl="cri">📊 Export Excel Intérims</button>${C.curId?'<button class="del" data-cr="del">Supprimer</button>':''}<span id="crmsg" class="mut">${crDirty()?'● modifications non enregistrées':''}</span></div></div>`;
+ const top=`<div class="card"><div class="lrow" style="margin-top:0"><label>Plannings enregistrés <select data-cr="sel"><option value="" disabled hidden${C.curId?'':' selected'}>Choisir un planning…</option>${opts}</select></label><input type="text" data-cr="name" placeholder="Nom du planning" value="${esc(cur.name||'')}" style="flex:1;min-width:160px"></div><div class="lrow"><button class="pri" data-cr="save">💾 Enregistrer</button><button data-cr="new">Nouveau</button><button data-cr="print">🖨 Imprimer</button><button data-xl="cr">📊 Export Excel</button>${C.curId?'<button class="del" data-cr="del">Supprimer</button>':''}<span id="crmsg" class="mut">${crDirty()?'● modifications non enregistrées':''}</span></div></div>`;
  return top+epFlat()}
 function crChange(t){const C=S.cre;
  if(t.dataset.cr==='name'){C.cur.name=t.value.trim();const bd=$('#crband');if(bd)bd.textContent=C.cur.name||'NOUVEAU PLANNING';save();crDirtyMsg();return}
@@ -901,6 +909,27 @@ const XL={crc:null,
    ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+XL.x(sheet.replace(/[\\\/?*\[\]:]/g,' ').slice(0,31))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
    ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
    ['xl/worksheets/sheet1.xml',ws],['xl/styles.xml',styles]])},
+ // Même tableau : fichier Excel (XL.mode='') ou impression A4 portrait sur une page (XL.mode='print').
+ mode:'',
+ out(file,sheet,rows,merges,widths,fr,fc){if(XL.mode==='print')return XL.print(rows,merges,widths);XL.save(XL.book(sheet,rows,merges,widths,fr,fc),file)},
+ print(rows,merges,widths){const span={},skip={},ci=t=>t.split('').reduce((a,ch)=>a*26+ch.charCodeAt(0)-64,0)-1;
+  (merges||[]).forEach(m=>{const g=m.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);if(!g)return;const c1=ci(g[1]),r1=+g[2]-1,c2=ci(g[3]),r2=+g[4]-1;span[r1+','+c1]=[c2-c1+1,r2-r1+1];
+   for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)skip[r+','+c]=1});
+  const nc=Math.max(...rows.map(r=>r.length)),W=i=>(widths&&widths[i])||10;
+  let title='',h='<colgroup>'+Array.from({length:nc},(_,i)=>'<col style="width:'+(W(i)*7+8)+'px">').join('')+'</colgroup>';
+  rows.forEach((r,ri)=>{if(r.length===1&&r[0]&&r[0].s===3){title=r[0].v;return}
+   h+='<tr>'+r.map((c,ci2)=>{if(c==null||skip[ri+','+ci2])return'';const o=typeof c==='object'?c:{v:c},sp=span[ri+','+ci2];
+    const st=(o.L?'border-left:2.5px solid #000;':'')+(o.R?'border-right:2.5px solid #000;':'')+(o.T?'border-top:2.5px solid #000;':'');
+    return'<td class="x'+(o.s||5)+'"'+(sp&&sp[0]>1?' colspan="'+sp[0]+'"':'')+(sp&&sp[1]>1?' rowspan="'+sp[1]+'"':'')+(st?' style="'+st+'"':'')+'>'+esc(o.v==null?'':String(o.v)).replace(/\n/g,'<br>')+'</td>'}).join('')+'</tr>'});
+  const old=$('#prt');if(old)old.remove();const o=document.createElement('div');o.id='prt';o.className='xp';
+  const TW=Array.from({length:nc},(_,i)=>W(i)*7+8).reduce((x,y)=>x+y,0);o.innerHTML=(title?'<h2>'+esc(title)+'</h2>':'')+'<table style="width:'+TW+'px">'+h+'</table>';
+  // Mesure hors écran, puis réduction pour tenir sur une page A4 portrait (≈ 718 × 1040 px imprimables).
+  o.style.cssText='display:block;position:absolute;left:-20000px;top:0;width:max-content;visibility:hidden';document.body.appendChild(o);
+  const w=o.scrollWidth,hh=o.scrollHeight,z=Math.min(1.6,718/w,1040/hh);o.style.cssText='zoom:'+z.toFixed(3);
+  const sz=document.createElement('style');sz.id='prtsz';sz.textContent='@page{size:A4 portrait;margin:8mm}';document.head.appendChild(sz);
+  const done=()=>{const e=$('#prt');if(e)e.remove();const y=$('#prtsz');if(y)y.remove()};
+  window.onafterprint=()=>{done();window.onafterprint=null};
+  try{window.print()}catch(e){done()}},
  save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}};
 const xlSafe=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').toUpperCase();
 const xlName=t=>'GESTIME-'+t+'-'+MOIS[M].toUpperCase()+'-'+Y+'-'+STORE.name+'.xlsx';
@@ -911,7 +940,7 @@ function xlInterim(){const k=key(Y,M),n=dim(),E=S.emps,LVI=Object.fromEntries(E.
  for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay();rows.push([{v:JRS[wd]+' '+d,s:1},...E.flatMap(e=>{const r=recs(e.id,k)[d]||{},m=calc(r);
    if(!r.a&&LVI[e.id].has(d))return b4('CP','','','');return b4(r.a||'',r.d||'',r.p&&r.p!=='00:00'?r.p:'',m?fmt(m):'')})])}
  rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>b4('','','',fmt(monthTotal(e.id,k)),4))]);
- XL.save(XL.book('Intérims '+MOIS[M]+' '+Y,rows,merges,[9,...E.flatMap(()=>[8,7,6,7])]),xlName('INTERIMS'))}
+ XL.out(xlName('INTERIMS'),'Intérims '+MOIS[M]+' '+Y,rows,merges,[9,...E.flatMap(()=>[8,7,6,7])])}
 function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),Lb={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
  const rows=[[{v:'EMPLOYÉS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...P.map(p=>({v:p.name,s:2,L:1,R:1}))],[{v:'',s:2},...P.map(()=>({v:'',s:2,L:1,R:1}))]];
  for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay(),fr=ferie(Y,M,d);rows.push([{v:JRS[wd]+' '+d+(fr?' ('+fr+')':''),s:1},...P.map(p=>{let r=sdata(p.id).days[d]||{};if(!r.t&&LV[p.id].has(d))r={t:'cp'};if(!r.t||r.t==='x')return{v:'',L:1,R:1};
@@ -919,7 +948,7 @@ function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.
  rows.push([{v:'ACOMPTE €',s:1},...P.map(p=>{const D=sdata(p.id);return{v:D.ac==null||D.ac===''?'':Number(D.ac),L:1,R:1}})]);
  rows.push([{v:'NOTE',s:1},...P.map(p=>({v:sdata(p.id).note||'',s:9,L:1,R:1}))]);
  rows.push([{v:'TOTAL',s:4},...P.map(p=>{const x=st(p);return{v:'HS '+fmt(x.hs)+'\nCongés '+x.cp+' j\nMaladie '+x.ma+' j\nAbs '+abTxt(x.ab,x.abh),s:4,L:1,R:1}})]);
- XL.save(XL.book('Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[19,...P.map(()=>13)]),xlName('EMPLOYES'))}
+ XL.out(xlName('EMPLOYES'),'Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[19,...P.map(()=>13)])}
 // Congés : une colonne par personne, une ligne par mois (même forme que les autres tableaux). g = 'e' employés, 'i' intérims.
 function xlConges(g){const L=S.leave[Y]||{},T=g==='i'?'INTÉRIMS':'EMPLOYÉS',P=g==='i'?S.emps:S.staff.people;
  if(!P.length)throw new Error('vide');
@@ -927,7 +956,7 @@ function xlConges(g){const L=S.leave[Y]||{},T=g==='i'?'INTÉRIMS':'EMPLOYÉS',P=
  for(let m=0;m<12;m++){const mm=String(m+1).padStart(2,'0');rows.push([{v:MOIS[m].toUpperCase(),s:1},...P.map(p=>{const arr=(L[p.id]||[]).filter(z=>z.a&&z.a.slice(0,7)===Y+'-'+mm).sort((u,v)=>u.a<v.a?-1:1);
    return{v:arr.map(z=>fd(z.a)+' → '+fd(z.b)+(dn(z)?' ('+dn(z)+' j)':'')).join('\n'),s:9,L:1,R:1}})])}
  rows.push([{v:'TOTAL '+Y,s:4},...P.map(p=>{const a=L[p.id]||[];return{v:a.reduce((s,z)=>s+dn(z),0)+' j',s:4,L:1,R:1}})]);
- XL.save(XL.book('Congés '+T.toLowerCase()+' '+Y,rows,[],[11,...P.map(()=>Math.max(12,Math.min(16,Math.floor(96/P.length))))],2,1),'GESTIME-CONGES-'+xlSafe(T)+'-'+Y+'-'+STORE.name+'.xlsx')}
+ XL.out('GESTIME-CONGES-'+xlSafe(T)+'-'+Y+'-'+STORE.name+'.xlsx','Congés '+T.toLowerCase()+' '+Y,rows,[],[11,...P.map(()=>Math.max(12,Math.min(16,Math.floor(96/P.length))))],2,1)}
 // EMP : une ligne par personne, une colonne par jour (tient en A4 portrait). Chaque case : créneau 1, créneau 2, pause, total du jour.
 function xlEmp(title,file,groups){const G=groups.filter(g=>g.people.length),DJ=['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI','DIMANCHE'];
  if(!G.length)throw new Error('vide');
@@ -937,19 +966,15 @@ function xlEmp(title,file,groups){const G=groups.filter(g=>g.people.length),DJ=[
    rows.push([{v:p.name+(p.note?'\n'+p.note:''),s:1,T:1},...DJ.map((x,d)=>{const r=p.days[d]||{},m=epDay(r);day[d]+=m;if(!m)return{v:'REPOS',T:1};
      return{v:[seg(r.a1,r.b1),seg(r.a2,r.b2),r.p&&r.p!=='00:00'?'pause '+r.p:'','= '+fmt(m)].filter(Boolean).join('\n'),T:1}}),{v:fmt(w),s:4,L:1,R:1,T:1}])})});
  rows.push([{v:'TOTAL',s:4,T:1},...day.map(m=>({v:m?fmt(m):'',s:4,T:1})),{v:fmt(tot),s:4,L:1,R:1,T:1}]);
- XL.save(XL.book(title.slice(0,31),rows,merges,[17,12,12,12,12,12,12,12,9],2,1),file)}
-// Création : sépare employés et intérims (groupe « INTÉRIMS », nom présent dans l'onglet Intérim, nom avec « * » ou note « intérim »).
-function crIsI(p,g){const up=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase(),nm=up(p.name).replace(/[*\s]+$/,'').replace(/^[*\s]+/,'').trim();
- const ig=(S.emp.groups||[]).filter(x=>/INTERIM/.test(up(x.title))).flatMap(x=>x.people);
- return /INTERIM/.test(up(g&&g.title))||p.grp==='INTÉRIMS'||/\*/.test(p.name||'')||/INTERIM/.test(up(p.note))||ig.some(q=>q.id===p.id||up(q.name).replace(/^[*\s]+/,'')===nm)||S.emps.some(e=>up(e.name)===nm)}
-function crSplit(i){const cur=S.cre&&S.cre.cur;if(!cur)return[];return(cur.groups||[]).map(g=>({title:'',people:g.people.filter(p=>crIsI(p,g)===i)}))}
+ XL.out(file,title.slice(0,31),rows,merges,[17,12,12,12,12,12,12,12,9],2,1)}
 function xlMsg(b,t){const m=(b.parentElement&&b.parentElement.querySelector('span.mut'))||document.getElementById('crmsg');if(m)m.textContent=t}
-document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('button[data-xl]');if(!b)return;const k=b.dataset.xl;
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('button[data-xl],button[data-xp]');if(!b)return;const pr=!!b.dataset.xp,k=b.dataset.xl||b.dataset.xp;
+ XL.mode=pr?'print':'';
  try{if(k==='int')xlInterim();else if(k==='emp')xlEmployes();else if(k==='cge')xlConges('e');else if(k==='cgi')xlConges('i');
   else if(k==='ep')xlEmp('EMP — semaine type — '+STORE.name,'GESTIME-EMP-'+STORE.name+'.xlsx',S.emp.groups);
-  else if(k==='cre'||k==='cri'){const n=(S.cre&&S.cre.cur&&S.cre.cur.name)||'PLANNING',T=k==='cri'?'INTÉRIMS':'EMPLOYÉS';
-   xlEmp('EMP '+T+' — '+n+' — '+STORE.name,'GESTIME-EMP-'+xlSafe(n)+'-'+xlSafe(T)+'-'+STORE.name+'.xlsx',crSplit(k==='cri'))}
-  xlMsg(b,'Fichier Excel créé ✓')}catch(e){if(e.message==='vide')xlMsg(b,/i$/.test(k)?'Aucun intérim à exporter':'Aucun employé à exporter');else{console.error(e);xlMsg(b,'Export impossible')}}});
+  else if(k==='cr'){const n=(S.cre&&S.cre.cur&&S.cre.cur.name)||'PLANNING';xlEmp('EMP — '+n+' — '+STORE.name,'GESTIME-EMP-'+xlSafe(n)+'-'+STORE.name+'.xlsx',(S.cre&&S.cre.cur&&S.cre.cur.groups)||[])}
+  xlMsg(b,pr?'':'Fichier Excel créé ✓')}catch(e){if(e.message==='vide')xlMsg(b,/i$/.test(k)?'Aucun intérim':'Aucun employé');else{console.error(e);xlMsg(b,pr?'Impression impossible':'Export impossible')}}
+ XL.mode=''});
 // ===== CONGÉS -> EMPLOYÉS : les périodes posées dans l'onglet Congés apparaissent en « Congé » =====
 function leaveDays(pid,y,m){
  const out=new Set(),last=new Date(y,m+1,0).getDate(),mm=String(m+1).padStart(2,'0'),s0=y+'-'+mm+'-01',e0=y+'-'+mm+'-'+String(last).padStart(2,'0');
