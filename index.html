@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="36">
+<meta name="gt-version" content="37">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -549,7 +549,10 @@ function applyImport(txt){try{let o=JSON.parse(txt);const multi=!!(o&&o.magasins
  if(!o||!o.emps||!o.staff||!o.data)throw 0;S=o;if(!S.leave)S.leave={};epMig();crInit();epPauseAll();save();cur=S.emps[0]&&S.emps[0].id;ecur=null;ed=null;render();
  if(multi){const m=$('#bkmsg');if(m){m.textContent='✓ '+STORE.name+' restauré. Pour l’autre magasin : changez de magasin puis importez le même fichier.';m.style.color='var(--acc)'}}}
  catch(e){const m=$('#bkmsg');m.textContent='Fichier non valide';m.style.color='var(--dng)'}}
-function render(){S.emps.forEach(e=>e.name=String(e.name||'').toUpperCase());S.staff.people.forEach(q=>q.name=String(q.name||'').toUpperCase());if(S.emp)S.emp.groups.forEach(g=>{g.title=String(g.title||'').toUpperCase();g.people.forEach(q=>q.name=String(q.name||'').toUpperCase())});header();$('#tf').parentNode.style.display='';$('#tp').style.display='none';if(view==='plan')view='flat';if(eview==='one')eview='flat';$('#mi').className=mode==='int'?'on':'';$('#me').className=mode==='emp'?'on':'';$('#mc').className=mode==='leave'?'on':'';$('#mp').className=mode==='ep'?'on':'';$('#tn').style.display=mode==='ep'?'':'none';$('#leg').style.display=(mode==='emp'&&eview==='flat')?'flex':'none';$('.bar').style.display=mode==='ep'?'none':'';['pm','mo','nm'].forEach(i=>$('#'+i).style.display=mode==='leave'?'none':'');if(mode==='ep'){const V2={tf:'flat',tr:'rec',tn:'new'};for(const i in V2)$('#'+i).className=(V2[i]===epview?'on':'');$('#app').innerHTML=epview==='rec'?epRec():epview==='new'?crView():epFlat();if(epview!=='rec')epCalc();return}if(mode==='emp'){const EV={tf:'flat',tp:'one',tr:'rec'};for(const i in EV)$('#'+i).className=EV[i]===eview?'on':'';$('#app').innerHTML=eview==='flat'?emp():eview==='one'?emp1():empRec();if(eview!=='rec')sumStaff();return}if(mode==='leave'){const V3={tf:'flat',tr:'rec'};for(const i in V3)$('#'+i).className=V3[i]===lview?'on':'';$('#app').innerHTML=lview==='rec'?leaveRec():leaveView();if(lview!=='rec')sumLeave();return}const V={tf:'flat',tp:'plan',tr:'rec'};for(const i in V)$('#'+i).className=V[i]===view?'on':'';$('#app').innerHTML=view==='flat'?flat():view==='plan'?plan():recap();if(view==='flat')calcFlat();else if(view==='plan')calcAll()}
+// v37 : retire la note « 35H écrit à la main » (SANDRINE, EMP) demandée par le gérant ; une seule fois, puis synchronisé.
+function noteFix(){let n=0;const G=[...((S.emp&&S.emp.groups)||[]),...((S.cre&&S.cre.cur&&S.cre.cur.groups)||[]),...((S.cre&&S.cre.list)||[]).flatMap(l=>l.groups||[])];
+ G.forEach(g=>(g.people||[]).forEach(q=>{if(q.note&&/^\s*35\s*h\s*écrit à la main\s*$/i.test(q.note)){q.note='';n++}}));return n}
+function render(){if(noteFix()){try{save()}catch(e){}}S.emps.forEach(e=>e.name=String(e.name||'').toUpperCase());S.staff.people.forEach(q=>q.name=String(q.name||'').toUpperCase());if(S.emp)S.emp.groups.forEach(g=>{g.title=String(g.title||'').toUpperCase();g.people.forEach(q=>q.name=String(q.name||'').toUpperCase())});header();$('#tf').parentNode.style.display='';$('#tp').style.display='none';if(view==='plan')view='flat';if(eview==='one')eview='flat';$('#mi').className=mode==='int'?'on':'';$('#me').className=mode==='emp'?'on':'';$('#mc').className=mode==='leave'?'on':'';$('#mp').className=mode==='ep'?'on':'';$('#tn').style.display=mode==='ep'?'':'none';$('#leg').style.display=(mode==='emp'&&eview==='flat')?'flex':'none';$('.bar').style.display=mode==='ep'?'none':'';['pm','mo','nm'].forEach(i=>$('#'+i).style.display=mode==='leave'?'none':'');if(mode==='ep'){const V2={tf:'flat',tr:'rec',tn:'new'};for(const i in V2)$('#'+i).className=(V2[i]===epview?'on':'');$('#app').innerHTML=epview==='rec'?epRec():epview==='new'?crView():epFlat();if(epview!=='rec')epCalc();return}if(mode==='emp'){const EV={tf:'flat',tp:'one',tr:'rec'};for(const i in EV)$('#'+i).className=EV[i]===eview?'on':'';$('#app').innerHTML=eview==='flat'?emp():eview==='one'?emp1():empRec();if(eview!=='rec')sumStaff();return}if(mode==='leave'){const V3={tf:'flat',tr:'rec'};for(const i in V3)$('#'+i).className=V3[i]===lview?'on':'';$('#app').innerHTML=lview==='rec'?leaveRec():leaveView();if(lview!=='rec')sumLeave();return}const V={tf:'flat',tp:'plan',tr:'rec'};for(const i in V)$('#'+i).className=V[i]===view?'on':'';$('#app').innerHTML=view==='flat'?flat():view==='plan'?plan():recap();if(view==='flat')calcFlat();else if(view==='plan')calcAll()}
 function calcAll(){
  const e=S.emps.find(x=>x.id===cur);if(!e)return;const R=recs(e.id,key(Y,M)),n=dim(),wk=[];let w=0,tot=0;
  for(let d=1;d<=n;d++){const m=calc(R[d]),c=$(`[data-t="${d}"]`);if(c){c.textContent=fmt(m);c.className='t'+(m?'':' z')}
@@ -942,14 +945,21 @@ const XL={crc:null,
  save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}};
 const xlSafe=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').toUpperCase();
 const xlName=t=>'GESTIME-'+t+'-'+MOIS[M].toUpperCase()+'-'+Y+'-'+STORE.name+'.xlsx';
-function xlInterim(){const k=key(Y,M),n=dim(),E=S.emps,LVI=Object.fromEntries(E.map(q=>[q.id,leaveDays(q.id,Y,M)]));
+// Intérims : colonnes A (arrivée), D (départ), P (pause), TOTAL. Au plus 5 intérims côte à côte :
+// au-delà, un nouveau tableau est ajouté en dessous, après une ligne vide (v37, demande du gérant).
+function xlInterim(){const k=key(Y,M),n=dim(),ALL=S.emps,LVI=Object.fromEntries(ALL.map(q=>[q.id,leaveDays(q.id,Y,M)])),PER=5;
  const b4=(a,b,c,d,s)=>[Object.assign({v:a,L:1},s?{s}:{}),s?{v:b,s}:b,s?{v:c,s}:c,Object.assign({v:d,R:1},s?{s}:{})];
- const rows=[[{v:'INTÉRIMS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...E.flatMap(e=>b4(e.name,'','','',2))],[{v:'',s:2},...E.flatMap(()=>b4('ARRIVÉE','DÉPART','PAUSE','TOTAL',4))]];
- const merges=['A2:A3'];E.forEach((e,i)=>merges.push(XL.col(1+i*4)+'2:'+XL.col(4+i*4)+'2'));
- for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay();rows.push([{v:JRS[wd]+' '+d,s:1},...E.flatMap(e=>{const r=recs(e.id,k)[d]||{},m=calc(r);
-   if(!r.a&&LVI[e.id].has(d))return b4('CP','','','');return b4(r.a||'',r.d||'',r.p&&r.p!=='00:00'?r.p:'',m?fmt(m):'')})])}
- rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>b4('','','',fmt(monthTotal(e.id,k)),4))]);
- XL.out(xlName('INTERIMS'),'Intérims '+MOIS[M]+' '+Y,rows,merges,[9,...E.flatMap(()=>[8,7,6,7])])}
+ const rows=[[{v:'INTÉRIMS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}]],merges=[];
+ const chunks=[];for(let i=0;i<ALL.length;i+=PER)chunks.push(ALL.slice(i,i+PER));if(!chunks.length)chunks.push([]);
+ chunks.forEach((E,ci)=>{if(ci)rows.push([]);const r0=rows.length+1;
+  rows.push([{v:'JOUR',s:2},...E.flatMap(e=>b4(e.name,'','','',2))]);
+  rows.push([{v:'',s:2},...E.flatMap(()=>b4('A','D','P','TOTAL',4))]);
+  merges.push('A'+r0+':A'+(r0+1));E.forEach((e,i)=>merges.push(XL.col(1+i*4)+r0+':'+XL.col(4+i*4)+r0));
+  for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay();rows.push([{v:JRS[wd]+' '+d,s:1},...E.flatMap(e=>{const r=recs(e.id,k)[d]||{},m=calc(r);
+    if(!r.a&&LVI[e.id].has(d))return b4('CP','','','');return b4(r.a||'',r.d||'',r.p&&r.p!=='00:00'?r.p:'',m?fmt(m):'')})])}
+  rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>b4('','','',fmt(monthTotal(e.id,k)),4))])});
+ const nb=Math.min(PER,Math.max(1,ALL.length));
+ XL.out(xlName('INTERIMS'),'Intérims '+MOIS[M]+' '+Y,rows,merges,[9,...Array(nb).fill(0).flatMap(()=>[8,7,6,7])])}
 function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),Lb={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
  const rows=[[{v:'EMPLOYÉS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...P.map(p=>({v:p.name,s:2,L:1,R:1}))],[{v:'',s:2},...P.map(()=>({v:'',s:2,L:1,R:1}))]];
  for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay(),fr=ferie(Y,M,d);rows.push([{v:JRS[wd]+' '+d+(fr?' ('+fr+')':''),s:1},...P.map(p=>{let r=sdata(p.id).days[d]||{};if(!r.t&&LV[p.id].has(d))r={t:'cp'};if(!r.t||r.t==='x')return{v:'',L:1,R:1};
@@ -957,13 +967,13 @@ function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.
  rows.push([{v:'ACOMPTE €',s:1},...P.map(p=>{const D=sdata(p.id);return{v:D.ac==null||D.ac===''?'':Number(D.ac),L:1,R:1}})]);
  rows.push([{v:'NOTE',s:1},...P.map(p=>({v:sdata(p.id).note||'',s:9,L:1,R:1}))]);
  rows.push([{v:'TOTAL',s:4},...P.map(p=>{const x=st(p);return{v:'HS '+fmt(x.hs)+'\nCongés '+x.cp+' j\nMaladie '+x.ma+' j\nAbs '+abTxt(x.ab,x.abh),s:4,L:1,R:1}})]);
- XL.out(xlName('EMPLOYES'),'Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[19,...P.map(()=>13)])}
+ XL.out(xlName('EMPLOYES'),'Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[19,...P.map(()=>Math.max(9,Math.min(13,Math.floor(84/P.length))))])} // v37 : colonnes resserrées quand il y a beaucoup d'employés
 // Congés : une colonne par personne, une ligne par mois (même forme que les autres tableaux). g = 'e' employés, 'i' intérims.
 function xlConges(g){const L=S.leave[Y]||{},T=g==='i'?'INTÉRIMS':'EMPLOYÉS',P=g==='i'?S.emps:S.staff.people;
  if(!P.length)throw new Error('vide');
  const rows=[[{v:'CONGÉS '+T+' '+Y+' — '+STORE.name,s:3}],[{v:'MOIS',s:2},...P.map(p=>({v:p.name,s:2,L:1,R:1}))]];
  for(let m=0;m<12;m++){const mm=String(m+1).padStart(2,'0');rows.push([{v:MOIS[m].toUpperCase(),s:1},...P.map(p=>{const arr=(L[p.id]||[]).filter(z=>z.a&&z.a.slice(0,7)===Y+'-'+mm).sort((u,v)=>u.a<v.a?-1:1);
-   return{v:arr.map(z=>fd(z.a)+' → '+fd(z.b)+(dn(z)?' ('+dn(z)+' j)':'')).join('\n'),s:9,L:1,R:1}})])}
+   return{v:arr.map(z=>fd(z.a)+' → '+fd(z.b)+(dn(z)?'\n('+dn(z)+' j)':'')).join('\n'),s:9,L:1,R:1}})])}
  rows.push([{v:'TOTAL '+Y,s:4},...P.map(p=>{const a=L[p.id]||[];return{v:a.reduce((s,z)=>s+dn(z),0)+' j',s:4,L:1,R:1}})]);
  XL.out('GESTIME-CONGES-'+xlSafe(T)+'-'+Y+'-'+STORE.name+'.xlsx','Congés '+T.toLowerCase()+' '+Y,rows,[],[11,...P.map(()=>Math.max(12,Math.min(16,Math.floor(96/P.length))))],2,1)}
 // EMP : une ligne par personne, une colonne par jour (tient en A4 portrait). Chaque case : créneau 1, créneau 2, pause, total du jour.
