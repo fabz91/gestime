@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="27">
+<meta name="gt-version" content="28">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -558,7 +558,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.cr){crCha
   if(r.a&&r.d&&!r.p&&t.dataset.f!=='p')r.p='00:00';if(!r.a&&!r.d&&!r.p)delete o[t.dataset.d];save();
   const pi=document.querySelector('[data-f=p][data-e="'+eid+'"][data-d="'+t.dataset.d+'"]');if(pi&&pi!==t&&r.p!==undefined)pi.value=r.p||'';view==='flat'?calcFlat():calcAll()}
  else if(t.classList.contains('nmf')){const e=S.emps.find(x=>x.id===t.dataset.id);e.name=(t.value.trim()||'Sans nom').toUpperCase();save()}});
-document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;if(b.id==='lgo'){doLogin();return}if(b.id==='lgx'){try{localStorage.removeItem(SK)}catch(e){}location.reload();return}if(b.id==='bke'){doExport();return}if(b.id==='bki'){if(window.api)window.api.importData().then(t=>{if(t&&confirm('Remplacer toutes les données de '+STORE.name+' par ce fichier ?'))applyImport(t)});else $('#imp').click();return}if(b.id==='bkf'){window.api.openFolder();return}if(b.dataset.cr){crClick(b);return}if(b.dataset.ep){epClick(b);crDirtyMsg();return}if(b.id==='dlgn'){closeDlg();return}if(b.id==='dlgy'){const o=$('#dlg'),k=o.dataset.kind,i=o.dataset.id;closeDlg();if(k==='cb'){const f=dlgCb;dlgCb=null;if(f)f();return}doDelete(k,i);return}if(b.id==='ud'){histGo(-1);return}if(b.id==='rd'){histGo(1);return}if(b.dataset.la){leaveClick(b);return}if(b.dataset.pa){staffClick(b);return}if(b.id==='mi'||b.id==='me'||b.id==='mc'||b.id==='mp'){mode={mi:'int',me:'emp',mc:'leave',mp:'ep'}[b.id];view='flat';eview='flat';lview='flat';epview='flat';S.mode=mode;confirmDel=false;save();render();return}
+document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;if(b.id==='lgo'){doLogin();return}if(b.id==='lgx'){try{localStorage.removeItem(SK)}catch(e){}location.reload();return}if(b.id==='bke'){doExport();return}if(b.id==='bki'){if(window.api)window.api.importData().then(t=>{if(t&&confirm('Remplacer toutes les données de '+STORE.name+' par ce fichier ?'))applyImport(t)});else $('#imp').click();return}if(b.id==='bkf'){window.api.openFolder();return}if(b.dataset.cr){crClick(b);return}if(b.dataset.ep){epClick(b);crDirtyMsg();return}if(b.id==='dlgn'){closeDlg();return}if(b.id==='dlgy'){const o=$('#dlg'),k=o.dataset.kind,i=o.dataset.id;closeDlg();if(k==='cb'){const f=dlgCb;dlgCb=null;if(f)f();return}doDelete(k,i);return}if(b.id==='ud'){histGo(-1);return}if(b.id==='rd'){histGo(1);return}if(b.dataset.la){leaveClick(b);return}if(b.dataset.pa){staffClick(b);return}if(b.id==='mi'||b.id==='me'||b.id==='mc'||b.id==='mp'){mode={mi:'int',me:'emp',mc:'leave',mp:'ep'}[b.id];S.mode=mode;confirmDel=false;save();render();return}
  if(b.id==='pm'||b.id==='nm'){M+=b.id==='pm'?-1:1;if(M<0){M=11;Y--}if(M>11){M=0;Y++}confirmDel=false;render()}
  else if(b.id==='tn'){epview='new';render()}else if(b.id==='tf'){if(mode==='leave')lview='flat';else if(mode==='ep')epview='flat';else if(mode==='emp')eview='flat';else view='flat';render()}else if(b.id==='tp'){if(mode==='emp')eview='one';else view='plan';render()}else if(b.id==='tr'){if(mode==='leave')lview='rec';else if(mode==='ep')epview='rec';else if(mode==='emp')eview='rec';else view='rec';render()}
  else if(b.dataset.act==='sel'){cur=b.dataset.id;confirmDel=false;render()}
@@ -1184,6 +1184,19 @@ document.addEventListener('mousedown',ev=>{const t=ev.target;if(!t||t.tagName!==
 })();
 
 histInit();
+// v28 : chaque onglet garde sa place (sous-onglet et défilement de la page et des tableaux),
+// quand on change d'onglet et après avoir fermé le logiciel. Mémorisé sur ce PC seulement, par magasin.
+const NAV_K='gt-nav-'+STORE.id;let NAV={},NAVK=null,NAVT=null;
+try{NAV=JSON.parse(localStorage.getItem(NAV_K)||'{}')||{}}catch(e){NAV={}}
+if(NAV.cur){const c=NAV.cur;if(['int','emp','leave','ep'].includes(c.mode))mode=c.mode;if(['flat','rec'].includes(c.view))view=c.view;if(['flat','rec'].includes(c.eview))eview=c.eview;if(['flat','rec'].includes(c.lview))lview=c.lview;if(['flat','rec','new'].includes(c.epview))epview=c.epview}
+function navKey(){return mode+':'+(mode==='ep'?epview:mode==='emp'?eview:mode==='leave'?lview:view)}
+function navGrab(){if(!NAVK)return;NAV.pos=NAV.pos||{};NAV.pos[NAVK]={y:window.scrollY,f:[...document.querySelectorAll('#app .fw')].map(e=>[e.scrollTop,e.scrollLeft])}}
+function navStore(){NAV.cur={mode,view,eview,lview,epview};try{localStorage.setItem(NAV_K,JSON.stringify(NAV))}catch(e){}}
+function navPut(){const p=NAV.pos&&NAV.pos[NAVK];if(!p)return;const fw=document.querySelectorAll('#app .fw');(p.f||[]).forEach((v,i)=>{if(fw[i]){fw[i].scrollTop=v[0];fw[i].scrollLeft=v[1]}});window.scrollTo(0,p.y||0)}
+const render0=render;
+render=function(){navGrab();render0();NAVK=navKey();navPut();navStore();requestAnimationFrame(navPut)};
+document.addEventListener('scroll',()=>{if(!NAVK)return;clearTimeout(NAVT);NAVT=setTimeout(()=>{navGrab();navStore()},200)},true);
+window.addEventListener('beforeunload',()=>{navGrab();navStore()});
 render();
 boot();
 
