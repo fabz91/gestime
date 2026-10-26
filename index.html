@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="37">
+<meta name="gt-version" content="38">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1228,7 +1228,7 @@ boot();
   return r}
  document.addEventListener('click',async ev=>{const b=ev.target.closest&&ev.target.closest('button');if(!b)return;
   if(b.id==='gr')ver();
-  if(b.id==='upb'){seenV=newV;flag(false);b.disabled=true;m('Recherche…');try{const r=await chk(false);if(r.status==='new'){m('Téléchargement…');const a=await window.api.updateApply(U());if(a.status==='done')m('✓ Mise à jour installée, redémarrage…');else m('⚠️ '+(a.msg||'échec'))}}catch(e){m('⚠️ '+e.message)}b.disabled=false}
+  if(b.id==='upb'){seenV=newV;flag(false);b.disabled=true;m('Recherche…');try{const r=await chk(false);if(r.status==='new'){m('Téléchargement…');let a=await window.api.updateApply(U());/* v38 : GitHub peut mettre quelques minutes à publier index.html : nouvel essai chaque minute (5 fois) */for(let k=1;k<=5&&a.status==='error'&&/incomplet/i.test(a.msg||'');k++){for(let sec=60;sec>0;sec--){m("GitHub n'a pas fini de publier la nouvelle version : nouvel essai dans "+sec+' s ('+k+'/5)…');await new Promise(f=>setTimeout(f,1000))}m('Téléchargement…');a=await window.api.updateApply(U())}if(a.status==='done')m('✓ Mise à jour installée, redémarrage…');else m('⚠️ '+(a.msg||'échec'))}}catch(e){m('⚠️ '+e.message)}b.disabled=false}
   if(b.id==='upr'){if(confirm('Revenir à la version fournie par l’installateur ? Vos données ne sont pas touchées.'))window.api.updateReset()}});
  // Vérifie au démarrage, puis toutes les 10 minutes et quand on revient sur la fenêtre (au plus une fois par minute) :
  // la pastille « 1 » apparaît même si le logiciel est resté ouvert pendant la publication.
