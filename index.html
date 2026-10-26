@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="31">
+<meta name="gt-version" content="32">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1222,5 +1222,17 @@ boot();
  // la pastille « 1 » apparaît même si le logiciel est resté ouvert pendant la publication.
  let last=0;const auto=()=>{if(Date.now()-last<60000)return;last=Date.now();chk(true).catch(()=>{})};
  setTimeout(auto,4000);setInterval(()=>{last=0;auto()},600000);window.addEventListener('focus',auto);document.addEventListener('visibilitychange',()=>{if(!document.hidden)auto()});
+ // v32 : en plus du bouton, mise à jour automatique chaque soir à 21 h (heure du PC), comme GESMAR v28.
+ // Contrôle chaque minute ; si le PC était en veille à 21 h, c'est fait au réveil (avant minuit).
+ // Logiciel ouvert après 21 h : rien ce soir-là (pas de redémarrage pendant qu'on s'en sert).
+ // Jamais pendant une saisie (case en cours de frappe). Sans internet : nouvel essai chaque minute jusqu'à minuit.
+ const H=21;let fait=new Date().getHours()>=H?new Date().toDateString():'',soir=false,busy=false;
+ const soirGo=async()=>{const el=document.activeElement;
+  if(busy||(el&&/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)))return;
+  if(new Date().getHours()<H){soir=false;return}
+  busy=true;try{const r=await window.api.updateCheck(U());soir=r.status==='error';
+   if(r.status==='new'){await new Promise(f=>setTimeout(f,2000));const x=await window.api.updateApply(U());if(x.status==='done')return;soir=true}}catch(e){soir=true}
+  busy=false};
+ setInterval(()=>{const n=new Date(),d=n.toDateString();if(n.getHours()>=H&&fait!==d){fait=d;soir=true}if(soir)soirGo()},60000);
 })();
 </script></body></html>
