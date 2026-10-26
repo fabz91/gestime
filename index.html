@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="29">
+<meta name="gt-version" content="30">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -342,6 +342,9 @@ input.cpx{width:66px;min-width:66px;font-size:13px;font-weight:800;text-align:ce
 #gr.upd::after{content:"1";position:absolute;top:-7px;right:-7px;width:auto;height:17px;min-width:17px;padding:0 4px;border-radius:9px;background:#d3262b;color:#fff;box-shadow:0 0 0 2px var(--card);font:700 11px/17px system-ui,sans-serif;text-align:center}
 #upb.upd{display:flex;align-items:center}
 #upb.upd::after{content:"1";margin-left:auto;flex:none;width:20px;height:20px;padding:0;box-sizing:border-box;border-radius:10px;background:#d3262b;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center}
+/* v30 : la pastille « 1 » clignote pour être bien visible */
+@keyframes updBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.2;transform:scale(1.2)}}
+#gr.upd::after,#upb.upd::after{animation:updBlink 1s ease-in-out infinite}
 /* ===== Engrenage et flèches annuler / rétablir identiques à GESMAR ===== */
 .top .undo{gap:8px;align-items:center}
 .top .undo button{width:34px;height:34px;padding:0;border-radius:8px;display:grid;place-items:center;font-size:0;line-height:0;color:var(--ink);background:var(--card);border:1px solid var(--line)}
