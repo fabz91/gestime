@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="44">
+<meta name="gt-version" content="45">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -117,7 +117,8 @@ input[data-f=name],.nmf,#nm2{text-transform:uppercase}
 :root[data-theme="dark"] .del2{color:#1d1010}
 .ec{display:flex;flex-direction:column;gap:3px;padding:3px;min-width:150px}
 .er{display:flex;gap:3px;align-items:center;justify-content:center}.er .mut{font-size:11px}
-.et{margin-left:auto;font-size:13px}.et.z{color:var(--mut);font-weight:400;font-size:11px}
+.et{margin-left:auto;font-size:13px}
+.fl td .ec input.emag{width:100%;min-width:0;height:18px;padding:0 4px;border:0;background:transparent;text-align:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}.fl td .ec input.emag::placeholder{text-transform:none;font-weight:400;letter-spacing:0;opacity:.35}.fl td .ec input.emag:focus{background:var(--card);outline:1px solid var(--line)}.et.z{color:var(--mut);font-weight:400;font-size:11px}
 .fl td .ec input[type=time]{width:64px;min-width:64px;padding:4px 2px;text-align:center;font-size:13px}
 .fl td .ec input[type=time]::-webkit-calendar-picker-indicator{display:none}
 .fl td .ec input[type=time]::-webkit-datetime-edit-fields-wrapper{padding:0}
@@ -767,7 +768,7 @@ function epFlat2(){
  const row=(fp,fa)=>cols.map(c=>c.add?`<td class="pa${c.sep?' sep':''}">${fa||''}</td>`:fp(c.p,c)).join('');
  const sp=c=>c.sep?' sep':'';
  let b='';
- for(let d=0;d<7;d++)b+=`<tr><td class="d mo">${DJ[d]}</td>`+cols.map(c=>c.add?`<td class="pa${sp(c)}"></td>`:`<td class="b${sp(c)}"><div class="ec"><div class="er">${ti(c.p,d,'a1')}<span>–</span>${ti(c.p,d,'b1')}</div><div class="er">${ti(c.p,d,'a2')}<span>–</span>${ti(c.p,d,'b2')}</div><div class="er"><span class="mut">pause</span>${ti(c.p,d,'p')}<b class="et" data-ept="${c.p.id}_${d}"></b></div></div></td>`).join('')+'</tr>';
+ for(let d=0;d<7;d++)b+=`<tr><td class="d mo">${DJ[d]}</td>`+cols.map(c=>c.add?`<td class="pa${sp(c)}"></td>`:`<td class="b${sp(c)}"><div class="ec"><div class="er">${ti(c.p,d,'a1')}<span>–</span>${ti(c.p,d,'b1')}</div><div class="er">${ti(c.p,d,'a2')}<span>–</span>${ti(c.p,d,'b2')}</div><div class="er"><span class="mut">pause</span>${ti(c.p,d,'p')}<b class="et" data-ept="${c.p.id}_${d}"></b></div><input type="text" class="emag" data-e2="${c.p.id}" data-wd="${d}" data-f="mag" value="${esc((c.p.days[d]||{}).mag||'')}" placeholder="magasin" aria-label="Magasin ${DJ[d].toLowerCase()}" title="Magasin ce jour-là (si la personne change de magasin)"></div></td>`).join('')+'</tr>';
  const f=`<tfoot><tr><td class="d">TOTAL SEMAINE</td>${cols.map(c=>c.add?`<td class="pa${sp(c)}"></td>`:`<td class="b${sp(c)}" data-epw="${c.p.id}"></td>`).join('')}</tr></tfoot>`;
  return `<div class="fw empw"><table class="fl emp2${banded?' lt':''}"><thead>${band}<tr>${names}</tr></thead><tbody>${b}</tbody>${f}</table></div><p class="mut" style="margin:8px 0 0">Semaine type : saisissez les créneaux (1 puis 2) et la pause, le total se calcule seul. Sans horaire, la case indique REPOS.</p>`}
 function epFlat(){return epFlat2();
@@ -793,8 +794,8 @@ function epChange(t){
  const p=epFind(t.dataset.e2);if(!p)return;const f=t.dataset.f;
  if(f==='name'){p.name=(t.value.trim()||'Sans nom').toUpperCase();save();return}
  if(f==='note'){p.note=t.value;save();return}
- const d=t.dataset.wd,r=p.days[d]=p.days[d]||{};r[f]=t.value;if(f!=='p'&&epAutoP(r)){const pi=document.querySelector('input[data-e2="'+p.id+'"][data-wd="'+d+'"][data-f="p"]');if(pi)pi.value=r.p}
- if(!r.a1&&!r.b1&&!r.a2&&!r.b2&&!r.p)delete p.days[d];
+ const d=t.dataset.wd,r=p.days[d]=p.days[d]||{};if(f==='mag'){r.mag=t.value.trim().toUpperCase();t.value=r.mag;if(!r.mag)delete r.mag}else r[f]=t.value;if(f!=='p'&&f!=='mag'&&epAutoP(r)){const pi=document.querySelector('input[data-e2="'+p.id+'"][data-wd="'+d+'"][data-f="p"]');if(pi)pi.value=r.p}
+ if(!r.a1&&!r.b1&&!r.a2&&!r.b2&&!r.p&&!r.mag)delete p.days[d];
  save();epCalc()}
 function epClick(b){const a=b.dataset.ep;
  if(a==='addp'){const g=epData().groups.find(x=>x.id===b.dataset.g);if(!g)return;const id='q'+Date.now();g.people.push({id,name:'NOUVEAU NOM',note:'',days:{}});save();render();const i=document.querySelector('input[data-e2="'+id+'"][data-f=name]');if(i){i.focus();i.select()}}
@@ -860,8 +861,12 @@ function crImp(){
    ['17-18/10',[['PITCHOU',{5:F}],['BELEZA',{5:Mi},'CONGÉS le dimanche'],['CHICO',{6:F}],['LAETITIA',{5:Mi}]]],
    ['24-25/10',[['PITCHOU',{5:F}],['BELEZA',{},'CONGÉS'],['CHICO',{5:Mi,6:F}],['LAETITIA',{5:Mi}]]]];let n=0;
   W.forEach(([w,r],i)=>add2('imp2-cgnaw26-'+(i+1),'CONGÉS NAWAEM 2026 — WE '+w,r.map(([nm,d,x])=>P('iw'+(++n),nm,d,'Longjumeau · week-end du '+w+(x?' · '+x:'')))))}
+ // v45 : magasin de chaque jour pour DAM / FAB (fichier PLANNING VACS FAB - DAM du gérant, 03/11) ; une fois par magasin
+ if(!C.imp['mag-vacs']){C.imp['mag-vacs']=1;const MG=['CLAMART','CLAMART','CLAMART','LONGJUMEAU','CLAMART'];
+  C.list.filter(x=>String(x.name).toUpperCase()==='PLANNING VACS FAB - DAM').forEach(x=>(x.groups||[]).forEach(g=>(g.people||[]).forEach(q=>{if(String(q.name).replace(/\s/g,'').toUpperCase()!=='DAM/FAB')return;
+   MG.forEach((m,d)=>{q.days[d]=q.days[d]||{};q.days[d].mag=m});q.note='Du 13/07/26 au 26/07/26'})))}
  add2('imp2-vacs','PLANNING VACS FAB - DAM',[
-  P('iv1','DAM / FAB',{0:D(H,'14h00','15h00','20h00'),1:D(H,'16h30'),2:D(H,'14h00','15h00','20h00'),3:D(H,'14h00','15h00','20h00'),4:D(H,'16h30')},'Longjumeau : lundi, jeudi · Clamart : mardi, mercredi, vendredi · du 13/07/26 au 26/07/26'),
+  P('iv1','DAM / FAB',{0:X(D(H,'14h00','15h00','20h00'),{mag:'CLAMART'}),1:X(D(H,'16h30'),{mag:'CLAMART'}),2:X(D(H,'14h00','15h00','20h00'),{mag:'CLAMART'}),3:X(D(H,'14h00','15h00','20h00'),{mag:'LONGJUMEAU'}),4:X(D(H,'16h30'),{mag:'CLAMART'})},'Du 13/07/26 au 26/07/26'),
   P('iv2','BRUNO',{0:D(H,'13h30','15h00','20h00'),1:D(0,0,'16h00','20h00'),3:D(H,'13h30','15h00','20h00'),4:D(0,0,'16h00','20h00'),5:D(H,'13h30','15h00','20h00'),6:D(H,'13h30','15h00','20h00')}),
   P('iv3','LAURENT',{1:D(H,'13h30','15h00','20h00'),2:D(H,'13h30','15h00','20h00'),4:D(H,'13h30','15h00','20h00'),5:D(H,'13h30','15h00','20h00'),6:D(H,'13h30','15h00','20h00')})])}
 function crInit(){if(!S.cre||!S.cre.cur)S.cre={list:[],curId:null,cur:crBlank()};crNorm(S.cre.cur);S.cre.list.forEach(crNorm);crImp()}
@@ -1047,8 +1052,8 @@ function xlEmp(title,file,groups){const G=groups.filter(g=>g.people.length),DJ=[
  const seg=(a,b)=>a&&b?a+'-'+b:'',NC=9,last=XL.col(NC-1),rows=[[{v:title,s:3}],[{v:'NOM',s:2},...DJ.map(v=>({v,s:2})),{v:'TOTAL',s:2,L:1,R:1}]],merges=[],day=[0,0,0,0,0,0,0];let tot=0;
  G.forEach(g=>{if(g.title){merges.push('A'+(rows.length+1)+':'+last+(rows.length+1));rows.push([{v:g.title,s:6,T:1,R:1},...Array(NC-1).fill(0).map((x,i)=>({v:'',s:6,T:1,R:i===NC-2}))])}
   g.people.forEach(p=>{const w=epWeek(p);tot+=w;
-   rows.push([{v:p.name+(p.note?'\n'+p.note:''),s:1,T:1},...DJ.map((x,d)=>{const r=p.days[d]||{},m=epDay(r);day[d]+=m;if(!m)return{v:'REPOS',T:1};
-     return{v:[seg(r.a1,r.b1),seg(r.a2,r.b2),r.p&&r.p!=='00:00'?'pause '+r.p:'','= '+fmt(m)].filter(Boolean).join('\n'),T:1}}),{v:fmt(w),s:4,L:1,R:1,T:1}])})});
+   rows.push([{v:p.name+(p.note?'\n'+p.note:''),s:1,T:1},...DJ.map((x,d)=>{const r=p.days[d]||{},m=epDay(r);day[d]+=m;if(!m)return{v:'REPOS'+(r.mag?'\n'+r.mag:''),T:1};
+     return{v:[seg(r.a1,r.b1),seg(r.a2,r.b2),r.p&&r.p!=='00:00'?'pause '+r.p:'','= '+fmt(m),r.mag||''].filter(Boolean).join('\n'),T:1}}),{v:fmt(w),s:4,L:1,R:1,T:1}])})});
  rows.push([{v:'TOTAL',s:4,T:1},...day.map(m=>({v:m?fmt(m):'',s:4,T:1})),{v:fmt(tot),s:4,L:1,R:1,T:1}]);
  XL.out(file,title.slice(0,31),rows,merges,[17,12,12,12,12,12,12,12,9],2,1)}
 function xlMsg(b,t){const m=(b.parentElement&&b.parentElement.querySelector('span.mut'))||document.getElementById('crmsg');if(m)m.textContent=t}
@@ -1099,7 +1104,7 @@ function histDiff(A,B){
    if(x.name!==y.name){tab('ep',{sub});hl('ep','input[data-e2="'+id+'"][data-f="name"]',null,sub)}
    if((x.note||'')!==(y.note||'')){tab('ep',{sub});hl('ep','input[data-e2="'+id+'"][data-f="note"]',null,sub)}
    keys(x.days,y.days).forEach(d=>{if(!eq((x.days||{})[d],(y.days||{})[d])){tab('ep',{sub});
-    ['a1','b1','a2','b2','p'].forEach(f=>{if((((x.days||{})[d]||{})[f]||'')!==(((y.days||{})[d]||{})[f]||''))hl('ep','input[data-e2="'+id+'"][data-wd="'+d+'"][data-f="'+f+'"]',null,sub)})}})});
+    ['a1','b1','a2','b2','p','mag'].forEach(f=>{if((((x.days||{})[d]||{})[f]||'')!==(((y.days||{})[d]||{})[f]||''))hl('ep','input[data-e2="'+id+'"][data-wd="'+d+'"][data-f="'+f+'"]',null,sub)})}})});
   Object.keys(pa).forEach(id=>{if(!pb[id]){tab('ep',{sub});R.boxes.push('ep')}})};
  grp('flat',A.emp,B.emp);
  grp('new',(A.cre||{}).cur,(B.cre||{}).cur);
