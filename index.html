@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="40">
+<meta name="gt-version" content="41">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -404,14 +404,30 @@ function calc(r){if(!r||!r.a||!r.d)return 0;let m=mins(r.d)-mins(r.a);if(m<0)m+=
 const recs=(eid,k)=>((S.data[k]||{})[eid])||{};
 const monthTotal=(eid,k)=>Object.values(recs(eid,k)).reduce((s,r)=>s+calc(r),0);
 const dim=()=>new Date(Y,M+1,0).getDate();
-// ===== INTÉRIMS : liste propre à chaque mois (v40) =====
-// S.intM['AAAA-MM'] = [{id}] ; un mois sans liste reprend le mois précédent qui en a une.
-function intKeys(){return Object.keys(S.intM||{}).filter(k=>Array.isArray(S.intM[k])).sort()}
-function intIds(k){const L=(S.intM||{})[k];if(Array.isArray(L))return L.map(x=>x.id);const ks=intKeys();let src=null;for(const x of ks)if(x<k)src=x;if(!src)src=ks.find(x=>x>k);return src?S.intM[src].map(x=>x.id):S.emps.map(e=>e.id)}
-function intFix(k){if(!S.intM)S.intM={};if(!Array.isArray(S.intM[k]))S.intM[k]=intIds(k).map(id=>({id}));return S.intM[k]}
-const MI=()=>intIds(key(Y,M)).map(id=>S.emps.find(e=>e.id===id)).filter(Boolean);
-function intYear(y){const s=new Set();for(let m=0;m<12;m++)intIds(key(y,m)).forEach(i=>s.add(i));const L=S.leave[y]||{};Object.keys(L).forEach(i=>{if((L[i]||[]).length)s.add(i)});return S.emps.filter(e=>s.has(e.id))}
+// ===== LISTES DE NOMS par mois / par année (v40-41) =====
+// S.intM['AAAA-MM'] (intérims), S.stM['AAAA-MM'] (employés), S.lvE['AAAA'] / S.lvI['AAAA'] (congés employés / intérims) = [{id}].
+// Une période sans liste reprend la période précédente qui en a une (sinon la suivante, sinon tout le monde).
+function plKeys(o){return Object.keys(o||{}).filter(k=>Array.isArray(o[k])).sort()}
+function plIds(o,k,dflt){const L=(o||{})[k];if(Array.isArray(L))return L.map(x=>x.id);const ks=plKeys(o);let src=null;for(const x of ks)if(x<k)src=x;if(!src)src=ks.find(x=>x>k);return src?o[src].map(x=>x.id):dflt()}
+function plFix(n,k,dflt){if(!S[n])S[n]={};if(!Array.isArray(S[n][k]))S[n][k]=plIds(S[n],k,dflt).map(id=>({id}));return S[n][k]}
+function plAdd(n,k,dflt,id){const L=plFix(n,k,dflt);if(!L.some(x=>x.id===id))L.push({id})}
+function plDel(n,k,dflt,id){S[n][k]=plFix(n,k,dflt).filter(x=>x.id!==id)}
+const intD=()=>S.emps.map(e=>e.id),stD=()=>S.staff.people.filter(p=>!p.cg).map(p=>p.id),leD=()=>S.staff.people.map(p=>p.id),liD=y=>()=>intYearAll(+y).map(e=>e.id);
+function intIds(k){return plIds(S.intM,k,intD)}
+function intFix(k){return plFix('intM',k,intD)}
+const byId=(ids,arr)=>ids.map(id=>arr.find(e=>e.id===id)).filter(Boolean);
+const MI=()=>byId(intIds(key(Y,M)),S.emps);
+const MS=()=>byId(plIds(S.stM,key(Y,M),stD),S.staff.people).filter(p=>!p.cg);
+const LE=y=>byId(plIds(S.lvE,String(y),leD),S.staff.people);
+const LI=y=>byId(plIds(S.lvI,String(y),liD(y)),S.emps);
+function intYearAll(y){const s=new Set();for(let m=0;m<12;m++)intIds(key(y,m)).forEach(i=>s.add(i));const L=S.leave[y]||{};Object.keys(L).forEach(i=>{if((L[i]||[]).length)s.add(i)});return S.emps.filter(e=>s.has(e.id))}
 function intMig(){if(S.intM)return false;S.intM={};const ks=new Set(Object.keys(S.data||{}));ks.add(key(Y,M));ks.forEach(k=>{S.intM[k]=S.emps.map(e=>({id:e.id}))});return true}
+function stMig(){if(S.stM)return false;S.stM={};const ks=new Set(Object.keys(S.staff.data||{}));ks.add(key(Y,M));ks.forEach(k=>{S.stM[k]=stD().map(id=>({id}))});return true}
+function lvMig(){if(S.lvE&&S.lvI)return false;S.lvE=S.lvE||{};S.lvI=S.lvI||{};const ys=new Set([String(Y),...Object.keys(S.leave||{}),...Object.keys(S.data||{}).map(k=>k.slice(0,4)),...Object.keys(S.staff.data||{}).map(k=>k.slice(0,4))]);
+ ys.forEach(y=>{if(!Array.isArray(S.lvE[y]))S.lvE[y]=leD().map(id=>({id}));if(!Array.isArray(S.lvI[y]))S.lvI[y]=intYearAll(+y).map(e=>({id:e.id}))});return true}
+// retire une personne de la liste générale si elle n'est plus dans aucun mois ni aucune année
+function plPurge(id){const inL=n=>plKeys(S[n]).some(k=>S[n][k].some(x=>x.id===id));if(['intM','stM','lvE','lvI'].some(inL))return;
+ S.emps=S.emps.filter(x=>x.id!==id);S.staff.people=S.staff.people.filter(x=>x.id!==id);Object.values(S.data).forEach(m=>delete m[id]);Object.values(S.staff.data).forEach(m=>delete m[id]);for(const y in S.leave)delete S.leave[y][id]}
 function fixCur(){const L=MI();if(!L.some(e=>e.id===cur))cur=L[0]&&L[0].id}
 function header(){$('#mo').innerHTML=MOIS.map((n,i)=>`<option value="${i}" ${i===M?'selected':''}>${n}</option>`).join('');$('#yr').value=Y;bkInfo()}
 const CPI='<input type="text" class="cpx" value="CP" readonly tabindex="-1" title="Congé posé dans l’onglet Congés" aria-label="Congé payé">';
@@ -450,7 +466,7 @@ function recap(){
  <p style="margin:10px 0 0"><button data-xl="int">📊 Export Excel</button> <span id="cp" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="int">🖨 Imprimer</button></p></div>`}
 function sdata(pid,create){const k=key(Y,M);if(create){S.staff.data[k]=S.staff.data[k]||{};return S.staff.data[k][pid]=S.staff.data[k][pid]||{days:{}}}return((S.staff.data[k]||{})[pid])||{days:{}}}
 function emp(){
- const P=S.staff.people.filter(p=>!p.cg),n=dim(),td=new Date(),LV=Object.fromEntries(S.staff.people.map(q=>[q.id,leaveDays(q.id,Y,M)])),O=[['','—'],['hs','Heures sup'],['cp','Congé'],['mal','Maladie'],['abs','Absent']];
+ const P=MS(),n=dim(),td=new Date(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),O=[['','—'],['hs','Heures sup'],['cp','Congé'],['mal','Maladie'],['abs','Absent']];
  const hb='';
  const h=`<tr><th class="c0"></th>${P.map(p=>`<th class="b"><div class="nh"><input type="text" data-p="${p.id}" data-f="name" value="${esc(p.name)}" aria-label="Nom"><button class="xs" data-pa="del" data-id="${p.id}">${confirmDel===p.id?'Sûr ?':'✕'}</button></div></th>`).join('')}${P.length?'':'<th class="b"></th>'}</tr>`;
  let b='';
@@ -466,7 +482,7 @@ function st(p){const D=sdata(p.id);let hs=0,cp=0,ma=0,ab=0,abh=0,yh=0;Object.val
  for(const kk in S.staff.data)if(kk.startsWith(Y+'-'))Object.values((S.staff.data[kk][p.id]||{days:{}}).days).forEach(r=>{if(r.t==='hs')yh+=mins(r.h)});return{D,hs,cp,ma,ab,abh,yh}}
 const abTxt=(d,m)=>(d?d+' j':'')+(m?(d?' + ':'')+fmt(m):'')||'0 j';
 function emp1(){
- const P=S.staff.people.filter(p=>!p.cg);if(!P.some(p=>p.id===ecur))ecur=P[0]&&P[0].id;
+ const P=MS();if(!P.some(p=>p.id===ecur))ecur=P[0]&&P[0].id;
  const chips=`<div class="chips">${P.map(p=>`<button class="chip ${p.id===ecur?'on':''}" data-pa="sel" data-id="${p.id}">${esc(p.name)}</button>`).join('')}<button class="chip add" data-pa="add">+ Ajouter</button></div>`;
  const p=P.find(x=>x.id===ecur);if(!p)return chips+'<p class="mut">Aucun nom. Ajoutez une personne avec « + Ajouter ».</p>';
  const n=dim(),D=sdata(p.id),td=new Date();let rows='';
@@ -478,11 +494,11 @@ function emp1(){
  <div class="foot"><span>TOTAL ${MOIS[M].toLowerCase()}</span><span data-fs="${p.id}"></span></div></div>`}
 function empRec(){
  const T={hs:0,cp:0,ma:0,ab:0,abh:0};
- const rows=S.staff.people.filter(p=>!p.cg).map(p=>{const x=st(p);T.hs+=x.hs;T.cp+=x.cp;T.ma+=x.ma;T.ab+=x.ab;T.abh+=x.abh;
+ const rows=MS().map(p=>{const x=st(p);T.hs+=x.hs;T.cp+=x.cp;T.ma+=x.ma;T.ab+=x.ab;T.abh+=x.abh;
   return `<tr><td>${esc(p.name)}</td><td><b>${fmt(x.hs)}</b></td><td>${x.cp} j</td><td>${x.ma} j</td><td>${abTxt(x.ab,x.abh)}</td></tr>`}).join('');
  return `<div class="card"><h3 style="margin:0 0 6px">${MOIS[M]} ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>HEURES SUP</th><th>CONGÉ</th><th>MALADIE</th><th>ABSENT</th></tr></thead><tbody>${rows}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${fmt(T.hs)}</td><td>${T.cp} j</td><td>${T.ma} j</td><td>${abTxt(T.ab,T.abh)}</td></tr></tbody></table></div>
  <p style="margin:10px 0 0"><button data-xl="emp">📊 Export Excel</button> <span id="cp2" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="emp">🖨 Imprimer</button></p></div>`}
-function sumStaff(){S.staff.people.forEach(p=>{let hs=0,a=0,c=0,ah=0;Object.values(effDays(p.id)).forEach(r=>{if(r.t==='hs')hs+=mins(r.h);else if(r.t==='cp')c++;else if(r.t==='abs'&&r.h)ah+=mins(r.h);else if(r.t)a++});const e=$('[data-fs="'+p.id+'"]');if(e)e.innerHTML='<span class="tfl h">HS '+fmt(hs)+'</span><span class="tfl c">Congés '+c+' j</span><span class="tfl a">Abs '+abTxt(a,ah)+'</span>'})}
+function sumStaff(){MS().forEach(p=>{let hs=0,a=0,c=0,ah=0;Object.values(effDays(p.id)).forEach(r=>{if(r.t==='hs')hs+=mins(r.h);else if(r.t==='cp')c++;else if(r.t==='abs'&&r.h)ah+=mins(r.h);else if(r.t)a++});const e=$('[data-fs="'+p.id+'"]');if(e)e.innerHTML='<span class="tfl h">HS '+fmt(hs)+'</span><span class="tfl c">Congés '+c+' j</span><span class="tfl a">Abs '+abTxt(a,ah)+'</span>'})}
 const addD=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 function lvAdd(pid,iso){const all=()=>Object.values(S.leave||{}).map(L=>L[pid]||[]).flat();
  if(all().some(x=>x.a<=iso&&(x.b||x.a)>=iso))return;
@@ -496,9 +512,9 @@ function lvDel(pid,iso){for(const y in (S.leave||{})){const a=(S.leave[y]||{})[p
   else{const nb=x.b;x.b=addD(iso,-1);const ny=addD(iso,1).slice(0,4),L=S.leave[ny]=S.leave[ny]||{};(L[pid]=L[pid]||[]).push({id:'l'+Date.now()+Math.random().toString(36).slice(2,5),a:addD(iso,1),b:nb})}}}}
 function staffChange(t){const pid=t.dataset.p,f=t.dataset.f;
  if(f==='name'){const p=S.staff.people.find(x=>x.id===pid);p.name=(t.value.trim()||'Sans nom').toUpperCase();save();return}
- const D=sdata(pid,1);
+ plFix('stM',key(Y,M),stD);const D=sdata(pid,1);
  if(t.dataset.d2){const d=t.dataset.d2,r=D.days[d]=D.days[d]||{};
-  if(f==='t'){const iso=Y+'-'+String(M+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(t.value==='cp'){lvAdd(pid,iso);r.t=''}else{lvDel(pid,iso);r.t=t.value}t.className=t.value?'s-'+t.value:'';const h=t.closest('tr').querySelector('input[data-f=h][data-p="'+pid+'"]');h.style.display=r.t==='hs'||r.t==='abs'?'':'none';h.title=r.t==='abs'?'Heures d’absence (vide = journée entière)':'';if(r.t!=='hs'&&r.t!=='abs'){r.h='';h.value=''}}else r.h=t.value;
+  if(f==='t'){const iso=Y+'-'+String(M+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(t.value==='cp'){lvAdd(pid,iso);plAdd('lvE',iso.slice(0,4),leD,pid);r.t=''}else{lvDel(pid,iso);r.t=t.value}t.className=t.value?'s-'+t.value:'';const h=t.closest('tr').querySelector('input[data-f=h][data-p="'+pid+'"]');h.style.display=r.t==='hs'||r.t==='abs'?'':'none';h.title=r.t==='abs'?'Heures d’absence (vide = journée entière)':'';if(r.t!=='hs'&&r.t!=='abs'){r.h='';h.value=''}}else r.h=t.value;
   if(!r.t)delete D.days[d]}
  else if(f==='sig')D.sig=t.checked;
  else if(f==='ac'){D.ac=t.value===''?null:+t.value;t.style.color=D.ac<0?'var(--dng)':''}
@@ -506,9 +522,9 @@ function staffChange(t){const pid=t.dataset.p,f=t.dataset.f;
  save();sumStaff()}
 function staffClick(b){
  if(b.dataset.pa==='sel'){ecur=b.dataset.id;confirmDel=false;render();return}
- if(b.dataset.pa==='copy'){const txt=MOIS[M]+' '+Y+'\n'+S.staff.people.filter(p=>!p.cg).map(p=>{const x=st(p);return p.name+' : HS '+fmt(x.hs)+' · Congé '+x.cp+' j · Maladie '+x.ma+' j · Absent '+abTxt(x.ab,x.abh)}).join('\n')+'\nTOTAL GÉNÉRAL HS : '+fmt(S.staff.people.reduce((a,q)=>a+st(q).hs,0));const m=$('#cp2');try{navigator.clipboard.writeText(txt).then(()=>{m.textContent='Copié ✓'},()=>{m.textContent='Copie impossible'})}catch(e){m.textContent='Copie impossible'}return}
- if(b.dataset.pa==='add'){const id='p'+Date.now();S.staff.people.push({id,name:'NOUVEAU NOM'});ecur=id;save();render();const i=document.querySelector('input[data-p="'+id+'"][data-f=name]');if(i){i.focus();i.select()}}
- else askDelete('staff',b.dataset.id)}
+ if(b.dataset.pa==='copy'){const txt=MOIS[M]+' '+Y+'\n'+MS().map(p=>{const x=st(p);return p.name+' : HS '+fmt(x.hs)+' · Congé '+x.cp+' j · Maladie '+x.ma+' j · Absent '+abTxt(x.ab,x.abh)}).join('\n')+'\nTOTAL GÉNÉRAL HS : '+fmt(MS().reduce((a,q)=>a+st(q).hs,0));const m=$('#cp2');try{navigator.clipboard.writeText(txt).then(()=>{m.textContent='Copié ✓'},()=>{m.textContent='Copie impossible'})}catch(e){m.textContent='Copie impossible'}return}
+ if(b.dataset.pa==='add'){const id='p'+Date.now();S.staff.people.push({id,name:'NOUVEAU NOM'});plAdd('stM',key(Y,M),stD,id);plAdd('lvE',String(Y),leD,id);ecur=id;save();render();const i=document.querySelector('input[data-p="'+id+'"][data-f=name]');if(i){i.focus();i.select()}}
+ else askDelete(mode==='leave'?'lve':'staffm',b.dataset.id)}
 function dn(x){return x.a&&x.b&&x.b>=x.a?Math.round((new Date(x.b)-new Date(x.a))/864e5)+1:0}
 const dtxt=x=>dn(x)?dn(x)+' j':'';
 function rr(){const w=$('.fw'),t=w?w.scrollTop:0,l=w?w.scrollLeft:0;render();const n=$('.fw');if(n){n.scrollTop=t;n.scrollLeft=l}}
@@ -518,7 +534,7 @@ const fd2=x=>x?x.slice(8,10)+'/'+x.slice(5,7)+'/'+x.slice(0,4):'';
 const edTxt=()=>{const n=dn({a:ed.a,b:ed.b});return ed.a?'Du '+fd2(ed.a)+' au '+fd2(ed.b||ed.a)+(n?' · '+n+' j':''):'Choisissez les dates'};
 const edHtml=()=>`<div class="edp" id="edp"><label>Du<input type="date" data-ed="a" value="${ed.a}"></label><label>Au<input type="date" data-ed="b" value="${ed.b}"></label><div class="edsum" id="edsum">${edTxt()}</div><div class="lrow"><button class="pri" data-la="save">OK</button>${ed.id?'<button class="del" data-la="del">Suppr.</button>':''}<button data-la="cancel">Annuler</button></div></div>`;
 function leaveView(){
- const G=[['EMPLOYÉS',S.staff.people],['INTÉRIMS',intYear(Y)]],L=S.leave[Y]||{},cols=[];
+ const G=[['EMPLOYÉS',LE(Y)],['INTÉRIMS',LI(Y)]],L=S.leave[Y]||{},cols=[];
  G.forEach((g,gi)=>{if(!g[1].length)cols.push({p:null,sep:gi>0});g[1].forEach((p,i)=>cols.push({p,sep:gi>0&&i===0,int:gi===1}))});
  const h1=`<tr>${G.map((g,gi)=>`<th colspan="${Math.max(1,g[1].length)+(gi?0:1)}" class="gh g${gi}${gi>0?' sep':''}">${g[0]} <button class="add3" ${gi?'data-act':'data-pa'}="add">+ Nom</button></th>`).join('')}</tr>`;
  const nameCell=c=>{const cl=c.sep?'sep':'b';if(!c.p)return `<th class="${cl}">—</th>`;const ok=confirmDel===c.p.id?'Sûr ?':'✕';
@@ -532,9 +548,9 @@ function leaveView(){
    return `<td class="${c.sep?'sep':'b'}"><div class="lv">${arr.map(x=>ed&&ed.id===x.id?edHtml():`<button class="chip2" data-la="edit" data-l="${c.p.id}" data-i="${x.id}">DU ${fd(x.a)}<br>AU ${fd(x.b)} <b>${dtxt(x)}</b></button>`).join('')}${adding?edHtml():`<button class="add2" data-la="new" data-l="${c.p.id}" data-m="${m}">+ période</button>`}</div></td>`}).join('')+'</tr>'}
  const f=`<tfoot><tr><td class="d">TOTAL ${Y}</td>${cols.map(c=>`<td class="${c.sep?'sep':'b'}" data-lt="${c.p?c.p.id:''}"></td>`).join('')}</tr></tfoot>`;
  return `<div class="fw"><table class="fl lt"><thead>${h1}${h2}</thead><tbody>${b}</tbody>${f}</table></div><p class="mut" style="margin:8px 0 0">Touchez « + période » pour ajouter un congé, ou un congé existant pour le modifier. Un congé apparaît au mois de sa date de début. Total en jours calendaires. Les noms se modifient aussi ici (même liste que dans les autres onglets).</p>`}
-function sumLeave(){const L=S.leave[Y]||{};[...S.staff.people,...intYear(Y)].forEach(p=>{const e=$('[data-lt="'+p.id+'"]');if(e)e.textContent=(L[p.id]||[]).reduce((s,x)=>s+dn(x),0)+' j'})}
+function sumLeave(){const L=S.leave[Y]||{};[...LE(Y),...LI(Y)].forEach(p=>{const e=$('[data-lt="'+p.id+'"]');if(e)e.textContent=(L[p.id]||[]).reduce((s,x)=>s+dn(x),0)+' j'})}
 function leaveClick(b){const act=b.dataset.la;
- if(act==='copyrec'){const L=S.leave[Y]||{},ln=p=>{const a=L[p.id]||[];return '  '+p.name+' : '+a.length+' période(s), '+a.reduce((s,x)=>s+dn(x),0)+' j'};const txt='CONGÉS '+Y+'\nEMPLOYÉS\n'+S.staff.people.map(ln).join('\n')+'\nINTÉRIMS\n'+intYear(Y).map(ln).join('\n');const m=$('#cp4');try{navigator.clipboard.writeText(txt).then(()=>{m.textContent='Copié ✓'},()=>{m.textContent='Copie impossible'})}catch(e){m.textContent='Copie impossible'}return}
+ if(act==='copyrec'){const L=S.leave[Y]||{},ln=p=>{const a=L[p.id]||[];return '  '+p.name+' : '+a.length+' période(s), '+a.reduce((s,x)=>s+dn(x),0)+' j'};const txt='CONGÉS '+Y+'\nEMPLOYÉS\n'+LE(Y).map(ln).join('\n')+'\nINTÉRIMS\n'+LI(Y).map(ln).join('\n');const m=$('#cp4');try{navigator.clipboard.writeText(txt).then(()=>{m.textContent='Copié ✓'},()=>{m.textContent='Copie impossible'})}catch(e){m.textContent='Copie impossible'}return}
  const rm=id=>{for(const y in S.leave)for(const k in S.leave[y])S.leave[y][k]=S.leave[y][k].filter(z=>z.id!==id)};
  if(act==='new'){const d=Y+'-'+String(+b.dataset.m+1).padStart(2,'0')+'-01';ed={id:null,pid:b.dataset.l,m:+b.dataset.m,a:d,b:d}}
  else if(act==='edit'){let x=null;for(const y in S.leave){const f=(S.leave[y][b.dataset.l]||[]).find(z=>z.id===b.dataset.i);if(f)x=f}if(x)ed={id:x.id,pid:b.dataset.l,m:+x.a.slice(5,7)-1,a:x.a,b:x.b}}
@@ -564,7 +580,7 @@ function applyImport(txt){try{let o=JSON.parse(txt);const multi=!!(o&&o.magasins
 // v37 : retire la note « 35H écrit à la main » (SANDRINE, EMP) demandée par le gérant ; une seule fois, puis synchronisé.
 function noteFix(){let n=0;const G=[...((S.emp&&S.emp.groups)||[]),...((S.cre&&S.cre.cur&&S.cre.cur.groups)||[]),...((S.cre&&S.cre.list)||[]).flatMap(l=>l.groups||[])];
  G.forEach(g=>(g.people||[]).forEach(q=>{if(q.note&&/^\s*35\s*h\s*écrit à la main\s*$/i.test(q.note)){q.note='';n++}}));return n}
-function render(){if(noteFix()|intMig()){try{save()}catch(e){}}S.emps.forEach(e=>e.name=String(e.name||'').toUpperCase());S.staff.people.forEach(q=>q.name=String(q.name||'').toUpperCase());if(S.emp)S.emp.groups.forEach(g=>{g.title=String(g.title||'').toUpperCase();g.people.forEach(q=>q.name=String(q.name||'').toUpperCase())});header();$('#tf').parentNode.style.display='';$('#tp').style.display='none';if(view==='plan')view='flat';if(eview==='one')eview='flat';$('#mi').className=mode==='int'?'on':'';$('#me').className=mode==='emp'?'on':'';$('#mc').className=mode==='leave'?'on':'';$('#mp').className=mode==='ep'?'on':'';$('#tn').style.display=mode==='ep'?'':'none';$('#leg').style.display=(mode==='emp'&&eview==='flat')?'flex':'none';$('.bar').style.display=mode==='ep'?'none':'';['pm','mo','nm'].forEach(i=>$('#'+i).style.display=mode==='leave'?'none':'');if(mode==='ep'){const V2={tf:'flat',tr:'rec',tn:'new'};for(const i in V2)$('#'+i).className=(V2[i]===epview?'on':'');$('#app').innerHTML=epview==='rec'?epRec():epview==='new'?crView():epFlat();if(epview!=='rec')epCalc();return}if(mode==='emp'){const EV={tf:'flat',tp:'one',tr:'rec'};for(const i in EV)$('#'+i).className=EV[i]===eview?'on':'';$('#app').innerHTML=eview==='flat'?emp():eview==='one'?emp1():empRec();if(eview!=='rec')sumStaff();return}if(mode==='leave'){const V3={tf:'flat',tr:'rec'};for(const i in V3)$('#'+i).className=V3[i]===lview?'on':'';$('#app').innerHTML=lview==='rec'?leaveRec():leaveView();if(lview!=='rec')sumLeave();return}const V={tf:'flat',tp:'plan',tr:'rec'};for(const i in V)$('#'+i).className=V[i]===view?'on':'';$('#app').innerHTML=view==='flat'?flat():view==='plan'?plan():recap();if(view==='flat')calcFlat();else if(view==='plan')calcAll()}
+function render(){if(noteFix()|intMig()|stMig()|lvMig()){try{save()}catch(e){}}S.emps.forEach(e=>e.name=String(e.name||'').toUpperCase());S.staff.people.forEach(q=>q.name=String(q.name||'').toUpperCase());if(S.emp)S.emp.groups.forEach(g=>{g.title=String(g.title||'').toUpperCase();g.people.forEach(q=>q.name=String(q.name||'').toUpperCase())});header();$('#tf').parentNode.style.display='';$('#tp').style.display='none';if(view==='plan')view='flat';if(eview==='one')eview='flat';$('#mi').className=mode==='int'?'on':'';$('#me').className=mode==='emp'?'on':'';$('#mc').className=mode==='leave'?'on':'';$('#mp').className=mode==='ep'?'on':'';$('#tn').style.display=mode==='ep'?'':'none';$('#leg').style.display=(mode==='emp'&&eview==='flat')?'flex':'none';$('.bar').style.display=mode==='ep'?'none':'';['pm','mo','nm'].forEach(i=>$('#'+i).style.display=mode==='leave'?'none':'');if(mode==='ep'){const V2={tf:'flat',tr:'rec',tn:'new'};for(const i in V2)$('#'+i).className=(V2[i]===epview?'on':'');$('#app').innerHTML=epview==='rec'?epRec():epview==='new'?crView():epFlat();if(epview!=='rec')epCalc();return}if(mode==='emp'){const EV={tf:'flat',tp:'one',tr:'rec'};for(const i in EV)$('#'+i).className=EV[i]===eview?'on':'';$('#app').innerHTML=eview==='flat'?emp():eview==='one'?emp1():empRec();if(eview!=='rec')sumStaff();return}if(mode==='leave'){const V3={tf:'flat',tr:'rec'};for(const i in V3)$('#'+i).className=V3[i]===lview?'on':'';$('#app').innerHTML=lview==='rec'?leaveRec():leaveView();if(lview!=='rec')sumLeave();return}const V={tf:'flat',tp:'plan',tr:'rec'};for(const i in V)$('#'+i).className=V[i]===view?'on':'';$('#app').innerHTML=view==='flat'?flat():view==='plan'?plan():recap();if(view==='flat')calcFlat();else if(view==='plan')calcAll()}
 function calcAll(){
  const e=MI().find(x=>x.id===cur);if(!e)return;const R=recs(e.id,key(Y,M)),n=dim(),wk=[];let w=0,tot=0;
  for(let d=1;d<=n;d++){const m=calc(R[d]),c=$(`[data-t="${d}"]`);if(c){c.textContent=fmt(m);c.className='t'+(m?'':' z')}
@@ -582,8 +598,8 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b
  if(b.id==='pm'||b.id==='nm'){M+=b.id==='pm'?-1:1;if(M<0){M=11;Y--}if(M>11){M=0;Y++}confirmDel=false;render()}
  else if(b.id==='tn'){epview='new';render()}else if(b.id==='tf'){if(mode==='leave')lview='flat';else if(mode==='ep')epview='flat';else if(mode==='emp')eview='flat';else view='flat';render()}else if(b.id==='tp'){if(mode==='emp')eview='one';else view='plan';render()}else if(b.id==='tr'){if(mode==='leave')lview='rec';else if(mode==='ep')epview='rec';else if(mode==='emp')eview='rec';else view='rec';render()}
  else if(b.dataset.act==='sel'){cur=b.dataset.id;confirmDel=false;render()}
- else if(b.dataset.act==='add'){const id='e'+Date.now();S.emps.push({id,name:'NOUVEAU NOM'});intFix(key(Y,M)).push({id});cur=id;save();render();const i=$('#nm2')||document.querySelector('.nmf[data-id="'+id+'"]');if(i){i.focus();i.select()}}
- else if(b.dataset.act==='del'||b.dataset.act==='delx'){askDelete(mode==='leave'?'int':'intm',b.dataset.id||cur)}
+ else if(b.dataset.act==='add'){const id='e'+Date.now();S.emps.push({id,name:'NOUVEAU NOM'});intFix(key(Y,M)).push({id});plAdd('lvI',String(Y),liD(Y),id);cur=id;save();render();const i=$('#nm2')||document.querySelector('.nmf[data-id="'+id+'"]');if(i){i.focus();i.select()}}
+ else if(b.dataset.act==='del'||b.dataset.act==='delx'){askDelete(mode==='leave'?'lvi':'intm',b.dataset.id||cur)}
  else if(b.dataset.act==='copy'){const k=key(Y,M);const txt=MOIS[M]+' '+Y+'\n'+MI().map(e=>e.name+' : '+fmt(monthTotal(e.id,k))).join('\n')+'\nTOTAL GÉNÉRAL : '+fmt(MI().reduce((a,e)=>a+monthTotal(e.id,k),0));
   const ok=()=>{$('#cp').textContent='Copié ✓'};try{navigator.clipboard.writeText(txt).then(ok,()=>{$('#cp').textContent='Copie impossible'})}catch(e){$('#cp').textContent='Copie impossible'}}});
 // ===== SYNCHRONISATION (Supabase) =====
@@ -665,17 +681,18 @@ document.addEventListener('keydown',ev=>{if(ev.key!=='Enter'||ev.isComposing)ret
  t.blur()});
 
 // ===== CONFIRMATION DE SUPPRESSION (fenêtre au milieu) =====
-function askDelete(kind,id){let p;if(kind==='epers')p=epFind(id);else if(kind==='egrp'){const g=S.emp.groups.find(x=>x.id===id);p=g&&{name:g.title+' (tout le groupe)'}}else p=(kind==='int'||kind==='intm'?S.emps:S.staff.people).find(x=>x.id===id);if(!p)return;
+function askDelete(kind,id){let p;if(kind==='epers')p=epFind(id);else if(kind==='egrp'){const g=S.emp.groups.find(x=>x.id===id);p=g&&{name:g.title+' (tout le groupe)'}}else p=(['int','intm','lvi'].includes(kind)?S.emps:S.staff.people).find(x=>x.id===id);if(!p)return;
  const old=$('#dlg');if(old)old.remove();const o=document.createElement('div');o.id='dlg';o.dataset.kind=kind;o.dataset.id=id;
- o.innerHTML=`<div class="dlgb" role="dialog" aria-modal="true"><h3>Supprimer ${esc(p.name)}${kind==='intm'?' de '+MOIS[M].toLowerCase()+' '+Y:''} ?</h3><p class="mut">${kind==='intm'?'Seules ses heures de '+MOIS[M].toLowerCase()+' '+Y+' seront supprimées. Les autres mois et ses congés ne changent pas.':'Toutes ses données seront supprimées.'} Vous pourrez annuler avec la flèche ↶ en haut.</p><div class="lrow" style="justify-content:flex-end"><button id="dlgn">Annuler</button><button id="dlgy" class="pri del2">Supprimer</button></div></div>`;
+ o.innerHTML=`<div class="dlgb" role="dialog" aria-modal="true"><h3>Supprimer ${esc(p.name)}${kind==='intm'||kind==='staffm'?' de '+MOIS[M].toLowerCase()+' '+Y:kind==='lve'||kind==='lvi'?' des congés '+Y:''} ?</h3><p class="mut">${kind==='intm'||kind==='staffm'?'Seules ses saisies de '+MOIS[M].toLowerCase()+' '+Y+' seront supprimées. Les autres mois et ses congés ne changent pas.':kind==='lve'||kind==='lvi'?'Seuls ses congés '+Y+' seront supprimés. Les autres années ne changent pas.':'Toutes ses données seront supprimées.'} Vous pourrez annuler avec la flèche ↶ en haut.</p><div class="lrow" style="justify-content:flex-end"><button id="dlgn">Annuler</button><button id="dlgy" class="pri del2">Supprimer</button></div></div>`;
  document.body.appendChild(o);$('#dlgn').focus()}
 function closeDlg(){const o=$('#dlg');if(o)o.remove()}
 function doDelete(kind,id){
  if(kind==='epers'){epData().groups.forEach(g=>{g.people=g.people.filter(x=>x.id!==id)});save();render();return}
  if(kind==='egrp'){S.emp.groups=S.emp.groups.filter(x=>x.id!==id);save();render();return}
- if(kind==='intm'){const k=key(Y,M);S.intM[k]=intFix(k).filter(x=>x.id!==id);if(S.data[k])delete S.data[k][id];
-  if(!intKeys().some(kk=>S.intM[kk].some(x=>x.id===id))&&!Object.values(S.leave).some(L=>L&&(L[id]||[]).length)){S.emps=S.emps.filter(x=>x.id!==id);Object.values(S.data).forEach(m=>delete m[id])}
-  fixCur();confirmDel=false;save();render();return}
+ if(kind==='intm'||kind==='staffm'){const k=key(Y,M);if(kind==='intm'){plDel('intM',k,intD,id);if(S.data[k])delete S.data[k][id]}else{plDel('stM',k,stD,id);if(S.staff.data[k])delete S.staff.data[k][id];if(ecur===id)ecur=null}
+  plPurge(id);fixCur();confirmDel=false;save();render();return}
+ if(kind==='lve'||kind==='lvi'){const y=String(Y);if(kind==='lve')plDel('lvE',y,leD,id);else plDel('lvI',y,liD(y),id);if(S.leave[Y])delete S.leave[Y][id];
+  plPurge(id);fixCur();confirmDel=false;save();render();return}
  if(kind==='int'){S.emps=S.emps.filter(x=>x.id!==id);Object.values(S.data).forEach(m=>delete m[id]);for(const k in S.intM||{})if(Array.isArray(S.intM[k]))S.intM[k]=S.intM[k].filter(x=>x.id!==id);fixCur()}
  else{S.staff.people=S.staff.people.filter(x=>x.id!==id);Object.values(S.staff.data).forEach(m=>delete m[id]);if(ecur===id)ecur=null}
  for(const y in S.leave)delete S.leave[y][id];
@@ -792,7 +809,7 @@ function leaveRec(){
  const L=S.leave[Y]||{};let tot=0,totN=0;
  const grp=(title,list)=>{let gd=0,gn=0;const r=list.map(p=>{const a=L[p.id]||[],n=a.length,d=a.reduce((s,x)=>s+dn(x),0);gd+=d;gn+=n;return `<tr><td>${esc(p.name)}</td><td>${n}</td><td><b>${d} j</b></td></tr>`}).join('');tot+=gd;totN+=gn;
   return `<tr class="gr"><td colspan="3">${title}</td></tr>${r}<tr class="sub"><td>TOTAL ${title}</td><td>${gn}</td><td>${gd} j</td></tr>`};
- return `<div class="card"><h3 style="margin:0 0 6px">Congés ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>PÉRIODES</th><th>JOURS</th></tr></thead><tbody>${grp('EMPLOYÉS',S.staff.people)}${grp('INTÉRIMS',intYear(Y))}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${totN}</td><td>${tot} j</td></tr></tbody></table></div><p class="mut" style="margin:8px 0 0">Jours calendaires, pour l’année affichée en haut.</p><p style="margin:10px 0 0"><button data-xl="cge">📊 Export Excel Employés</button> <button data-xl="cgi">📊 Export Excel Intérims</button> <span id="cp4" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="cge">🖨 Imprimer Employés</button> <button data-xp="cgi">🖨 Imprimer Intérims</button> <span class="mut"></span></p></div>`}
+ return `<div class="card"><h3 style="margin:0 0 6px">Congés ${Y}</h3><div class="sc"><table class="rc"><thead><tr><th style="text-align:left">NOM</th><th>PÉRIODES</th><th>JOURS</th></tr></thead><tbody>${grp('EMPLOYÉS',LE(Y))}${grp('INTÉRIMS',LI(Y))}<tr class="tot"><td>TOTAL GÉNÉRAL</td><td>${totN}</td><td>${tot} j</td></tr></tbody></table></div><p class="mut" style="margin:8px 0 0">Jours calendaires, pour l’année affichée en haut.</p><p style="margin:10px 0 0"><button data-xl="cge">📊 Export Excel Employés</button> <button data-xl="cgi">📊 Export Excel Intérims</button> <span id="cp4" class="mut"></span></p><p style="margin:8px 0 0"><button data-xp="cge">🖨 Imprimer Employés</button> <button data-xp="cgi">🖨 Imprimer Intérims</button> <span class="mut"></span></p></div>`}
 
 // ===== EMP : CRÉATION (plannings enregistrables) =====
 var dlgCb=null;
@@ -975,7 +992,7 @@ function xlInterim(){const k=key(Y,M),n=dim(),ALL=MI(),LVI=Object.fromEntries(AL
   rows.push([{v:'TOTAL',s:4},...E.flatMap(e=>b4('','','',fmt(monthTotal(e.id,k)),4))])});
  const nb=Math.min(PER,Math.max(1,ALL.length));
  XL.out(xlName('INTERIMS'),'Intérims '+MOIS[M]+' '+Y,rows,merges,[9,...Array(nb).fill(0).flatMap(()=>[8,7,6,7])])}
-function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),Lb={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
+function xlEmployes(){const P=MS(),n=dim(),LV=Object.fromEntries(P.map(q=>[q.id,leaveDays(q.id,Y,M)])),Lb={hs:'Heures sup',cp:'Congé',mal:'Maladie',abs:'Absent'};
  const rows=[[{v:'EMPLOYÉS — '+MOIS[M]+' '+Y+' — '+STORE.name,s:3}],[{v:'JOUR',s:2},...P.map(p=>({v:p.name,s:2,L:1,R:1}))],[{v:'',s:2},...P.map(()=>({v:'',s:2,L:1,R:1}))]];
  for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).getDay(),fr=ferie(Y,M,d);rows.push([{v:JRS[wd]+' '+d+(fr?' ('+fr+')':''),s:1},...P.map(p=>{let r=sdata(p.id).days[d]||{};if(!r.t&&LV[p.id].has(d))r={t:'cp'};if(!r.t||r.t==='x')return{v:'',L:1,R:1};
    return{v:Lb[r.t]+((r.t==='hs'||r.t==='abs')&&r.h?' '+r.h:''),L:1,R:1}})])}
@@ -984,7 +1001,7 @@ function xlEmployes(){const P=S.staff.people.filter(p=>!p.cg),n=dim(),LV=Object.
  rows.push([{v:'TOTAL',s:4},...P.map(p=>{const x=st(p);return{v:'HS '+fmt(x.hs)+'\nCongés '+x.cp+' j\nMaladie '+x.ma+' j\nAbs '+abTxt(x.ab,x.abh),s:4,L:1,R:1}})]);
  XL.out(xlName('EMPLOYES'),'Employés '+MOIS[M]+' '+Y,rows,['A2:A3',...P.map((p,i)=>XL.col(1+i)+'2:'+XL.col(1+i)+'3')],[19,...P.map(()=>Math.max(9,Math.min(13,Math.floor(84/P.length))))])} // v37 : colonnes resserrées quand il y a beaucoup d'employés
 // Congés : une colonne par personne, une ligne par mois (même forme que les autres tableaux). g = 'e' employés, 'i' intérims.
-function xlConges(g){const L=S.leave[Y]||{},T=g==='i'?'INTÉRIMS':'EMPLOYÉS',P=g==='i'?intYear(Y):S.staff.people;
+function xlConges(g){const L=S.leave[Y]||{},T=g==='i'?'INTÉRIMS':'EMPLOYÉS',P=g==='i'?LI(Y):LE(Y);
  if(!P.length)throw new Error('vide');
  const rows=[[{v:'CONGÉS '+T+' '+Y+' — '+STORE.name,s:3}],[{v:'MOIS',s:2},...P.map(p=>({v:p.name,s:2,L:1,R:1}))]];
  for(let m=0;m<12;m++){const mm=String(m+1).padStart(2,'0');rows.push([{v:MOIS[m].toUpperCase(),s:1},...P.map(p=>{const arr=(L[p.id]||[]).filter(z=>z.a&&z.a.slice(0,7)===Y+'-'+mm).sort((u,v)=>u.a<v.a?-1:1);
