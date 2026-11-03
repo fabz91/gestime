@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="43">
+<meta name="gt-version" content="44">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -751,7 +751,8 @@ function epMassa(){if(S.emp.massaI)return;S.emp.massaI=true;const g1=S.emp.group
  if(g1&&g2){const i=g1.people.findIndex(p=>p.id==='q7'||/^MASSA$/i.test(p.name));if(i>=0)g2.people.unshift(g1.people.splice(i,1)[0])}}
 function epFind(id){for(const g of epData().groups){const p=g.people.find(x=>x.id===id);if(p)return p}return null}
 function epSeg(a,b){if(!a||!b)return 0;let m=mins(b)-mins(a);if(m<0)m+=1440;return m}
-function epDay(r){if(!r)return 0;return epSeg(r.a1,r.b1)+epSeg(r.a2,r.b2)}
+// v44 : un seul créneau + une pause notée => la pause est retirée du total (avec deux créneaux, la pause est l'écart entre eux, déjà hors total).
+function epDay(r){if(!r)return 0;const x=epSeg(r.a1,r.b1),y=epSeg(r.a2,r.b2);if(x&&y)return x+y;const t=x+y;return t?Math.max(0,t-mins(r.p)):0}
 function epWeek(p){let t=0;for(let d=0;d<7;d++)t+=epDay(p.days[d]);return t}
 function epCalc(){epData().groups.forEach(g=>g.people.forEach(p=>{for(let d=0;d<7;d++){const m=epDay(p.days[d]),e=$('[data-ept="'+p.id+'_'+d+'"]');if(e){e.textContent=m?fmt(m):'REPOS';e.className='et'+(m?'':' z')}}const w=$('[data-epw="'+p.id+'"]');if(w)w.textContent=fmt(epWeek(p))}))}
 function epFlat2(){
