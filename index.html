@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="42">
+<meta name="gt-version" content="43">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -832,7 +832,37 @@ function crImp(){
   P('iv2','BRUNO',{0:D('8h30','13h30','15h00','20h00'),1:D(0,0,'16h00','20h00'),3:D('8h30','13h30','15h00','20h00'),4:D(0,0,'16h00','20h00'),5:D('8h30','13h30','15h00','20h00'),6:D('8h30','13h30','15h00','20h00')}),
   P('iv3','LAURENT',{1:D('8h30','13h30','15h00','20h00'),2:D('8h30','13h30','15h00','20h00'),4:D('8h30','13h30','15h00','20h00'),5:D('8h30','13h30','15h00','20h00'),6:D('8h30','13h30','15h00','20h00')})]);
  add('imp-chico','CHICO / CAISSIÈRE',demo[2].people);
- add('imp-miary28','SIMULATION MIARY (28H)',[P('im1','MIARY',{1:D('11h00','19h00',0,0,'1h'),2:D('11h00','19h00',0,0,'1h'),4:D('11h00','19h00',0,0,'1h'),6:D('11h00','19h00',0,0,'1h')},'Simulation G20 LONGJUMEAU')])}
+ add('imp-miary28','SIMULATION MIARY (28H)',[P('im1','MIARY',{1:D('11h00','19h00',0,0,'1h'),2:D('11h00','19h00',0,0,'1h'),4:D('11h00','19h00',0,0,'1h'),6:D('11h00','19h00',0,0,'1h')},'Simulation G20 LONGJUMEAU')])
+ // v43 : plannings des fichiers .ods donnés par le gérant le 03/11 (lundi = 0 … dimanche = 6). Ajoutés une fois dans chaque magasin, sauf s'il existe déjà un planning du même nom.
+ const add2=(id,name,people)=>{if(C.imp[id])return;C.imp[id]=1;if(!C.list.some(x=>x.id===id||String(x.name).toUpperCase()===name))C.list.push({id,name,v2:true,groups:[{id:'g1',title:'',people:JSON.parse(JSON.stringify(people))}]})};
+ const H='8h30',J=(d,o)=>Object.assign({},...d.map(i=>({[i]:o}))),X=(...o)=>Object.assign({},...o);
+ add2('imp2-alternant','ALTERNANT',[P('ia1','JEMIMA',{1:D('11h00','19h00',0,0,'1h'),2:D(H,'16h30',0,0,'1h'),4:D('11h00','19h00',0,0,'1h'),5:D(H,'16h30',0,0,'1h')},'Alternance, G20 CLAMART, à partir du 01/07/25')]);
+ add2('imp2-caiss26','PLANNING CAISSIÈRES 2026',[
+  P('ic1','SHEILA',X(J([0,4],D(H,'13h30')),J([1,2,3],D(0,0,'15h00','20h00'))),'À partir du 15/12/25'),
+  P('ic2','DOINA',X(J([0,4],D(0,0,'15h00','20h00')),J([1,2,3],D(H,'13h30'))),'À partir du 15/12/25')]);
+ add2('imp2-claoff26','PLANNING CLAM OFF 2026',[
+  P('io1','SANDRINE',X(J([0,3],D('10h30','15h00')),J([1,4],D('10h30','16h00')))),
+  P('io2','FABIAN DAMIEN',X(J([0,3],D(H,'13h30','14h30','20h00')),J([1,4],D(H,'15h30')))),
+  P('io3','BRUNO',X(J([1,4],D('10h00','13h30','14h30','20h00')),J([2,5],D(H,'13h30','15h00','20h00')),{6:D(H,'12h30')})),
+  P('io4','BALASSO',X({0:D(0,0,'15h00','20h00'),3:D(0,0,'14h00','20h00'),6:D(H,'13h30','15h00','20h00')},J([1,4],D(H,'13h30','14h30','20h00')))),
+  P('io5','SEYDOU',X({0:D(H,'13h30'),2:D(0,0,'14h00','20h00'),5:D(H,'13h30','15h00','20h00')},J([1,4],D(H,'13h30','14h30','20h00')))),
+  P('io6','DOUNIA',J([5,6],D(H,'13h30','15h00','20h00'))),
+  P('io7','SHEILA',X(J([0,2],D(H,'20h00',0,0,'2h')),J([1,4],D(0,0,'13h00','20h00')),{3:D(0,0,'15h00','20h00')}),'Intérimaire')]);
+ add2('imp2-cpnaw24','PLANNING CP NAWAEM 2024',[
+  P('in1','SHEILA',{5:D(H,'20h00',0,0,'1h30')},'Longjumeau · samedis 22/06, 27/07, 03/08, 10/08 et 17/08/2024'),
+  P('in2','LAETITIA',{5:D('9h30','14h30')},'Longjumeau · samedis 22/06, 27/07, 03/08, 10/08 et 17/08/2024'),
+  P('in3','SERGE',{6:D(H,'20h00',0,0,'1h30')},'Longjumeau · dimanches 23/06, 28/07, 04/08, 11/08 et 18/08/2024')]);
+ {const F=D(H,'20h00',0,0,'1h30'),Mi=D(H,'14h30'),Q=D(H,'12h30'),W=[
+   ['26-27/09',[['PITCHOU',{5:F}],['BELEZA',{5:Q}],['CHICO',{5:F,6:F}],['LAETITIA',{5:Mi}],['SHEILA',{6:F}]]],
+   ['03-04/10',[['PITCHOU',{6:F}],['BELEZA',{5:F}],['CHICO',{5:F,6:F}],['LAETITIA',{5:Mi}],['SHEILA',{},'CONGÉS']]],
+   ['10-11/10',[['PITCHOU',{5:F}],['BELEZA',{5:Q}],['CHICO',{6:F}],['LAETITIA',{5:Mi}],['SHEILA',{},'CONGÉS']]],
+   ['17-18/10',[['PITCHOU',{5:F}],['BELEZA',{5:Mi},'CONGÉS le dimanche'],['CHICO',{6:F}],['LAETITIA',{5:Mi}]]],
+   ['24-25/10',[['PITCHOU',{5:F}],['BELEZA',{},'CONGÉS'],['CHICO',{5:Mi,6:F}],['LAETITIA',{5:Mi}]]]];let n=0;
+  W.forEach(([w,r],i)=>add2('imp2-cgnaw26-'+(i+1),'CONGÉS NAWAEM 2026 — WE '+w,r.map(([nm,d,x])=>P('iw'+(++n),nm,d,'Longjumeau · week-end du '+w+(x?' · '+x:'')))))}
+ add2('imp2-vacs','PLANNING VACS FAB - DAM',[
+  P('iv1','DAM / FAB',{0:D(H,'14h00','15h00','20h00'),1:D(H,'16h30'),2:D(H,'14h00','15h00','20h00'),3:D(H,'14h00','15h00','20h00'),4:D(H,'16h30')},'Longjumeau : lundi, jeudi · Clamart : mardi, mercredi, vendredi · du 13/07/26 au 26/07/26'),
+  P('iv2','BRUNO',{0:D(H,'13h30','15h00','20h00'),1:D(0,0,'16h00','20h00'),3:D(H,'13h30','15h00','20h00'),4:D(0,0,'16h00','20h00'),5:D(H,'13h30','15h00','20h00'),6:D(H,'13h30','15h00','20h00')}),
+  P('iv3','LAURENT',{1:D(H,'13h30','15h00','20h00'),2:D(H,'13h30','15h00','20h00'),4:D(H,'13h30','15h00','20h00'),5:D(H,'13h30','15h00','20h00'),6:D(H,'13h30','15h00','20h00')})])}
 function crInit(){if(!S.cre||!S.cre.cur)S.cre={list:[],curId:null,cur:crBlank()};crNorm(S.cre.cur);S.cre.list.forEach(crNorm);crImp()}
 const crSig=o=>JSON.stringify([o.name||'',o.groups]);
 function crDirty(){const C=S.cre,s=C.list.find(x=>x.id===C.curId);return s?crSig(s)!==crSig(C.cur):crSig(C.cur)!==crSig(crBlank())}
