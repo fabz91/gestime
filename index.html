@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="45">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="gt-version" content="46">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
+<link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -99,6 +101,8 @@ input[data-f=name],.nmf,#nm2{text-transform:uppercase}
 .rc td:first-child{min-width:150px}
 .rc tr.tot td{background:var(--accbg);font-weight:700;border-top:2px solid var(--line)}
 #lg{position:fixed;inset:0;background:var(--bg);z-index:99;display:flex;align-items:center;justify-content:center;padding:20px}
+.lgb h2{margin:0 0 2px;font-size:20px}.lgt{margin:0 0 4px;font-size:13px}.lgb input{font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.lgb .pri{padding:10px}.lgl{background:none;border:none;color:var(--mut);text-decoration:underline;cursor:pointer}
+#acc .row{align-items:center}#accm{font-size:13px;margin-right:6px}
 .lgb{display:flex;flex-direction:column;gap:10px;width:min(340px,100%);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
 .lgb h2{margin:0}.lgb input{padding:10px;font-size:16px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:60;background:var(--bg);padding:4px 0 8px}
@@ -365,7 +369,7 @@ table.int3 tr.dim td{border-bottom:2px solid #d0021b}
 <div id="stp"><div class="setb" role="dialog" aria-label="Changer de magasin"><h3>Magasin <button id="stx" aria-label="Fermer">✕</button></h3><div class="row" id="stl"></div><p class="mut" style="margin:0;font-size:12px">Chaque magasin a ses propres employés, intérims, congés et plannings.</p></div></div>
 <div id="set"><div class="setb" role="dialog" aria-label="Réglages"><h3>Réglages <span class="hr"><span id="syi" class="syi wait" title="Synchronisation…" role="img" aria-label="État de la synchronisation"></span><button id="setx" aria-label="Fermer">✕</button></span></h3>
 <div class="lab">Données</div><div class="row"><button id="bke">💾 Exporter</button><button id="bki">📂 Importer</button><button id="bkf" style="display:none">🗂️ Dossier des données</button></div>
-<div><span id="bkmsg"></span> <span id="sync"></span></div><button id="lgx" style="display:none">Se déconnecter</button><input type="file" id="imp" accept=".json,application/json" hidden>
+<div><span id="bkmsg"></span> <span id="sync"></span></div><div id="acc" style="display:none"><div class="lab">Compte</div><div class="row"><span id="accm" class="mut"></span><button id="lgi" style="display:none">🔑 Se connecter</button><button id="lgx" style="display:none">Se déconnecter</button></div></div><input type="file" id="imp" accept=".json,application/json" hidden>
 <div id="updb" style="display:none"><div class="lab">Logiciel</div><div class="row"><button id="upb">🔄 Mettre à jour le logiciel</button></div><div class="mut" id="upm" style="font-size:12px"></div></div>
 <div class="lab">Affichage</div><div class="th"><button id="thl">☀️ Clair</button><button id="thd">🌙 Sombre</button></div></div></div>
 <div class="bar">
@@ -595,7 +599,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.cr){crCha
   if(r.a&&r.d&&!r.p&&t.dataset.f!=='p')r.p='00:00';if(!r.a&&!r.d&&!r.p)delete o[t.dataset.d];save();
   const pi=document.querySelector('[data-f=p][data-e="'+eid+'"][data-d="'+t.dataset.d+'"]');if(pi&&pi!==t&&r.p!==undefined)pi.value=r.p||'';view==='flat'?calcFlat():calcAll()}
  else if(t.classList.contains('nmf')){const e=S.emps.find(x=>x.id===t.dataset.id);e.name=(t.value.trim()||'Sans nom').toUpperCase();save()}});
-document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;if(b.id==='lgo'){doLogin();return}if(b.id==='lgx'){try{localStorage.removeItem(SK)}catch(e){}location.reload();return}if(b.id==='bke'){doExport();return}if(b.id==='bki'){if(window.api)window.api.importData().then(t=>{if(t&&confirm('Remplacer toutes les données de '+STORE.name+' par ce fichier ?'))applyImport(t)});else $('#imp').click();return}if(b.id==='bkf'){window.api.openFolder();return}if(b.dataset.cr){crClick(b);return}if(b.dataset.ep){epClick(b);crDirtyMsg();return}if(b.id==='dlgn'){closeDlg();return}if(b.id==='dlgy'){const o=$('#dlg'),k=o.dataset.kind,i=o.dataset.id;closeDlg();if(k==='cb'){const f=dlgCb;dlgCb=null;if(f)f();return}doDelete(k,i);return}if(b.id==='ud'){histGo(-1);return}if(b.id==='rd'){histGo(1);return}if(b.dataset.la){leaveClick(b);return}if(b.dataset.pa){staffClick(b);return}if(b.id==='mi'||b.id==='me'||b.id==='mc'||b.id==='mp'){mode={mi:'int',me:'emp',mc:'leave',mp:'ep'}[b.id];view='flat';eview='flat';lview='flat';epview='flat';S.mode=mode;confirmDel=false;save();render();return}
+document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;if(b.id==='lgo'){doLogin();return}if(b.id==='lgx'){doLogout(b);return}if(b.id==='lgi'){const o=$('#set');if(o)o.classList.remove('on');showLogin('',!WEB&&ANON);return}if(b.id==='lgl'){const o=$('#lg');if(o)o.remove();return}if(b.id==='bke'){doExport();return}if(b.id==='bki'){if(window.api)window.api.importData().then(t=>{if(t&&confirm('Remplacer toutes les données de '+STORE.name+' par ce fichier ?'))applyImport(t)});else $('#imp').click();return}if(b.id==='bkf'){window.api.openFolder();return}if(b.dataset.cr){crClick(b);return}if(b.dataset.ep){epClick(b);crDirtyMsg();return}if(b.id==='dlgn'){closeDlg();return}if(b.id==='dlgy'){const o=$('#dlg'),k=o.dataset.kind,i=o.dataset.id;closeDlg();if(k==='cb'){const f=dlgCb;dlgCb=null;if(f)f();return}doDelete(k,i);return}if(b.id==='ud'){histGo(-1);return}if(b.id==='rd'){histGo(1);return}if(b.dataset.la){leaveClick(b);return}if(b.dataset.pa){staffClick(b);return}if(b.id==='mi'||b.id==='me'||b.id==='mc'||b.id==='mp'){mode={mi:'int',me:'emp',mc:'leave',mp:'ep'}[b.id];view='flat';eview='flat';lview='flat';epview='flat';S.mode=mode;confirmDel=false;save();render();return}
  if(b.id==='pm'||b.id==='nm'){M+=b.id==='pm'?-1:1;if(M<0){M=11;Y--}if(M>11){M=0;Y++}confirmDel=false;render()}
  else if(b.id==='tn'){if(epview!=='new')crOpen();epview='new';render()}else if(b.id==='tf'){if(mode==='leave')lview='flat';else if(mode==='ep')epview='flat';else if(mode==='emp')eview='flat';else view='flat';render()}else if(b.id==='tp'){if(mode==='emp')eview='one';else view='plan';render()}else if(b.id==='tr'){if(mode==='leave')lview='rec';else if(mode==='ep')epview='rec';else if(mode==='emp')eview='rec';else view='rec';render()}
  else if(b.dataset.act==='sel'){cur=b.dataset.id;confirmDel=false;render()}
@@ -604,18 +608,35 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b
  else if(b.dataset.act==='copy'){const k=key(Y,M);const txt=MOIS[M]+' '+Y+'\n'+MI().map(e=>e.name+' : '+fmt(monthTotal(e.id,k))).join('\n')+'\nTOTAL GÉNÉRAL : '+fmt(MI().reduce((a,e)=>a+monthTotal(e.id,k),0));
   const ok=()=>{$('#cp').textContent='Copié ✓'};try{navigator.clipboard.writeText(txt).then(ok,()=>{$('#cp').textContent='Copie impossible'})}catch(e){$('#cp').textContent='Copie impossible'}}});
 // ===== SYNCHRONISATION (Supabase) =====
-const CFG=window.SYNC&&window.SYNC.url&&window.SYNC.key&&!/VOTRE/.test(window.SYNC.url)?window.SYNC:null;
-const SK='horaires-auth';let TOK=null,RT=null,EXP=0,REV=0,pt=null;const sy={busy:false,pend:false,dirty:false,timer:null};
+const WEB=!window.api,CFG_K='gt-cfg';
+// Réglages Supabase : config.js sur PC ; sur téléphone, « code d'accès » collé une seule fois (jamais dans le dépôt public).
+function cfgRead(){if(window.SYNC&&window.SYNC.url&&window.SYNC.key&&!/VOTRE/.test(window.SYNC.url))return window.SYNC;try{const c=JSON.parse(localStorage.getItem(CFG_K)||'null');if(c&&c.url&&c.key)return c}catch(e){}return null}
+function cfgCode(t){const m=/^GT1-([A-Za-z0-9+/=_-]+)$/.exec(String(t||'').replace(/\s+/g,''));if(!m)return null;try{const p=atob(m[1].replace(/-/g,'+').replace(/_/g,'/')).split('|');if(/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(p[0])&&p[1])return{url:p[0],key:p[1]}}catch(e){}return null}
+let CFG=cfgRead();
+const SK='horaires-auth';let TOK=null,RT=null,EXP=0,REV=0,pt=null,ANON=false,LIVE=false,AUTHP=null,RETRY=null;const sy={busy:false,pend:false,dirty:false,timer:null};
 const SY_OK='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/><path d="M9 13.2l2.2 2.2L15.4 11"/></svg>',SY_KO='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/><path d="M4 4l16 16"/></svg>',SY_WT='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/></svg>';
 function syMsg(t,c){const i=document.getElementById('syi');if(!i)return;const st=c?'ko':(/^⏳/.test(t)?'wait':'ok');i.className='syi '+st;i.innerHTML=st==='ok'?SY_OK:st==='ko'?SY_KO:SY_WT;const s=document.getElementById('sync');if(s){s.textContent=/refaites/.test(t)?t:'';s.style.color=/refaites/.test(t)?'var(--dng)':''}i.title=st==='ok'?'Synchronisé avec les autres postes':st==='ko'?'Non synchronisé : '+String(t).replace(/^⚠️\s*/,''):'Synchronisation en cours…'}
-async function sbAuth(body,grant){const r=await fetch(CFG.url+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify(body)});
- const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||'refusé');
- TOK=j.access_token;RT=j.refresh_token;EXP=Date.now()+j.expires_in*1000;try{localStorage.setItem(SK,RT)}catch(e){}}
-async function sbReq(path,opt){
- if(Date.now()>EXP-60000&&RT){try{await sbAuth({refresh_token:RT},'refresh_token')}catch(e){TOK=null;showLogin('Session expirée, reconnectez-vous.');throw new Error('AUTH')}}
- const r=await fetch(CFG.url+'/rest/v1/'+path,Object.assign({},opt,{headers:Object.assign({apikey:CFG.key,'Content-Type':'application/json'},TOK&&TOK.split('.').length===3?{Authorization:'Bearer '+TOK}:{},opt&&opt.headers)}));
- if(!r.ok)throw new Error(r.status===401||r.status===403?'Accès refusé par la base (vérifiez la clé et le script SQL)':'Erreur '+r.status);return r.status===204?null:r.json()}
-async function pull(){const a=await sbReq('store?id=eq.'+SID+'&select=data,rev');return a&&a[0]}
+// Connexion (v46) : e-mail + mot de passe une seule fois par appareil, puis la session est gardée (jeton renouvelé tout seul).
+async function sbAuth(body,grant){let r;try{r=await fetch(CFG.url+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify(body)})}catch(e){throw new Error('OFFLINE')}
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok){const t=String(j.error_description||j.msg||j.message||''),x=new Error(/invalid login|invalid_credentials|invalid_grant/i.test(t+' '+(j.error_code||j.code||j.error||''))&&grant==='password'?'e-mail ou mot de passe incorrect':/email not confirmed/i.test(t)?'adresse e-mail pas encore confirmée':(t||'refusé'));x.st=r.status||400;throw x}
+ TOK=j.access_token;RT=j.refresh_token;EXP=Date.now()+(j.expires_in||3600)*1000;ANON=false;
+ try{localStorage.setItem(SK,RT);if(j.user&&j.user.email)localStorage.setItem(SK+'-mail',j.user.email)}catch(e){}}
+function refresh(){if(!AUTHP)AUTHP=sbAuth({refresh_token:RT},'refresh_token').finally(()=>{AUTHP=null});return AUTHP}
+function authLost(msg){TOK=null;RT=null;EXP=0;LIVE=false;clearInterval(pt);try{localStorage.removeItem(SK)}catch(e){}acct();showLogin(msg||'Session terminée : reconnectez-vous.',false)}
+async function sbReq(path,opt,again){
+ if(!ANON&&RT&&Date.now()>EXP-60000){try{await refresh()}catch(e){if(e.message==='OFFLINE')throw e;authLost();throw new Error('AUTH')}}
+ if(!ANON&&!TOK)throw new Error('AUTH');
+ let r;try{r=await fetch(CFG.url+'/rest/v1/'+path,Object.assign({},opt,{headers:Object.assign({apikey:CFG.key,'Content-Type':'application/json'},!ANON&&TOK?{Authorization:'Bearer '+TOK}:{},opt&&opt.headers)}))}catch(e){throw new Error('OFFLINE')}
+ if(r.status===401&&!ANON&&RT&&!again){EXP=0;return sbReq(path,opt,true)}
+ if(!r.ok){const x=new Error(r.status===401||r.status===403?'Accès refusé par la base':'Erreur '+r.status);x.st=r.status;throw x}return r.status===204?null:r.json()}
+// Accès libre (sans connexion) refusé : il faut se connecter.
+function denied(e){if(e&&(e.st===401||e.st===403)){if(ANON){ANON=false;TOK=null;LIVE=false;clearInterval(pt);acct();showLogin('Connectez-vous pour continuer la synchronisation.',false)}return true}return false}
+async function pull(){const a=await sbReq('store?id=eq.'+SID+'&select=data,rev');if(ANON&&!(a&&a.length)){const x=new Error('Accès refusé par la base');x.st=401;throw x}return a&&a[0]}
+// Dernière version reçue de la base, gardée sur l'appareil : des saisies faites hors ligne repartent au retour (fusion case par case).
+const BK='gt-base-'+STORE.id,strip=o=>{const c=Object.assign({},o);delete c.mode;delete c.lastBackup;delete c.eff;return JSON.stringify(c)};
+function baseSave(){try{localStorage.setItem(BK,JSON.stringify({rev:REV,base:BASE}))}catch(e){}}
+function baseLoad(){try{const o=JSON.parse(localStorage.getItem(BK)||'null');return o&&o.base&&typeof o.rev==='number'?o:null}catch(e){return null}}
 
 // Fusion case par case (même règle que GESMAR) : chaque poste garde ses saisies ;
 // une case tapée EN MÊME TEMPS sur deux postes est effacée partout et doit être réécrite.
@@ -632,35 +653,52 @@ function gtNotice(msg){let n=document.getElementById('gtn');if(!n){n=document.cr
  n.textContent=msg+'  ✕';clearTimeout(gtNotice.t);gtNotice.t=setTimeout(()=>{const x=document.getElementById('gtn');if(x)x.remove()},10000)}
 const EFF_MSG='⚠️ Une case a été tapée en même temps sur un autre poste : elle a été effacée, réécrivez-la.';
 let BASE=null,EFFSEEN=0,FAST=false;
-function useRemote(r){REV=r.rev;if(r.data&&r.data.emps&&r.data.staff){BASE=JSON.stringify(r.data);S=r.data;if(!S.leave)S.leave={};epMig();crInit();epPauseAll();cur=S.emps[0]&&S.emps[0].id;ecur=null;ed=null;localSave();histInit();rr();return true}return false}
-function schedPush(){if(!CFG||!TOK)return;sy.pend=true;clearTimeout(sy.timer);sy.timer=setTimeout(push,800)}
+function useRemote(r){if(!r)return false;REV=r.rev;if(r.data&&r.data.emps&&r.data.staff){BASE=JSON.stringify(r.data);baseSave();S=r.data;if(!S.leave)S.leave={};epMig();crInit();epPauseAll();cur=S.emps[0]&&S.emps[0].id;ecur=null;ed=null;localSave();histInit();rr();return true}return false}
+function schedPush(){if(!CFG||!(TOK||RT))return;sy.pend=true;clearTimeout(sy.timer);sy.timer=setTimeout(push,800)}
 async function push(){if(sy.busy){sy.dirty=true;return}sy.busy=true;sy.pend=false;sy.dirty=false;syMsg('⏳ Envoi…');const sent=JSON.stringify(S);
  try{const a=await sbReq('store?id=eq.'+SID+'&rev=eq.'+REV,{method:'PATCH',headers:{Prefer:'return=representation'},body:'{"data":'+sent+',"rev":'+(REV+1)+',"updated_at":"'+new Date().toISOString()+'"}'});
-  if(a&&a.length){REV=a[0].rev;BASE=sent;syMsg('✓ Synchronisé')}
+  if(a&&a.length){REV=a[0].rev;BASE=sent;baseSave();syMsg('✓ Synchronisé')}
   else{const r=await pull();
    if(!BASE||!r||!r.data||!r.data.emps){useRemote(r);syMsg('⚠️ Quelqu’un d’autre venait de modifier : données rechargées, refaites votre dernière saisie','var(--dng)')}
    else{const res={n:0},keep={mode:S.mode,lastBackup:S.lastBackup},m=gmMerge(JSON.parse(BASE),JSON.parse(JSON.stringify(S)),r.data,res);
-    REV=r.rev;BASE=JSON.stringify(r.data);S=Object.assign(m,keep);if(!S.leave)S.leave={};epMig();crInit();epPauseAll();
+    REV=r.rev;BASE=JSON.stringify(r.data);baseSave();S=Object.assign(m,keep);if(!S.leave)S.leave={};epMig();crInit();epPauseAll();
     if(!S.emps.some(e=>e.id===cur))cur=S.emps[0]&&S.emps[0].id;
     if(res.n){S.eff={t:Date.now()};EFFSEEN=S.eff.t;gtNotice(EFF_MSG)}
     localSave();rr();sy.dirty=true;FAST=true;syMsg('⏳ Fusion avec l’autre poste…')}}}
- catch(e){if(e.message!=='AUTH'){syMsg('⚠️ Hors ligne : modifications gardées sur cet appareil','var(--dng)');sy.dirty=true}}
- sy.busy=false;if(sy.dirty){setTimeout(push,FAST?300:5000)}FAST=false}
-async function poll(){if(!TOK||sy.busy||sy.pend||sy.dirty)return;const a=document.activeElement;if(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return;
- try{const r=await pull();if(r&&r.rev>REV){useRemote(r);syMsg('↻ Mis à jour');if(S.eff&&S.eff.t>EFFSEEN){EFFSEEN=S.eff.t;gtNotice(EFF_MSG)}}}catch(e){if(e.message!=='AUTH')syMsg('⚠️ Hors ligne','var(--dng)')}}
-function showLogin(msg){let o=$('#lg');if(!o){o=document.createElement('div');o.id='lg';document.body.appendChild(o)}
- o.innerHTML=`<div class="lgb"><h2>🔒 Connexion</h2><input id="lge" type="email" placeholder="E-mail" autocomplete="username"><input id="lgp" type="password" placeholder="Mot de passe" autocomplete="current-password"><button class="pri" id="lgo">Se connecter</button><div class="mut" id="lgm">${msg||''}</div></div>`}
-async function doLogin(){const m=$('#lgm');m.textContent='Connexion…';
- try{await sbAuth({email:$('#lge').value.trim(),password:$('#lgp').value},'password');$('#lg').remove();await afterLogin()}catch(e){m.textContent='Connexion refusée : '+e.message}}
-async function afterLogin(){try{const r=await pull();if(!r)throw new Error('magasin '+STORE.name+' absent de la base en ligne (lancez le script SQL)');
- if(r.rev===0&&!(r.data&&r.data.emps)){REV=r.rev;await push()}else{useRemote(r);EFFSEEN=(S.eff&&S.eff.t)||0}
- syMsg('✓ Synchronisé');clearInterval(pt);pt=setInterval(poll,15000)}catch(e){if(e.message!=='AUTH')syMsg('⚠️ '+e.message,'var(--dng)')}}
-async function boot(){if(!CFG){syMsg('⚠️ Synchronisation non réglée','x');return}if(!CFG.login){TOK=CFG.key;EXP=Infinity;await afterLogin();return}$('#lgx').style.display='';
+ catch(e){if(denied(e)){sy.dirty=true;syMsg('⚠️ Pas connecté : modifications gardées sur cet appareil','var(--dng)')}else if(e.message!=='AUTH'){syMsg('⚠️ Hors ligne : modifications gardées sur cet appareil','var(--dng)');sy.dirty=true}}
+ sy.busy=false;if(sy.dirty&&(ANON||TOK||RT)){setTimeout(push,FAST?300:5000)}FAST=false}
+async function poll(){if(!LIVE||sy.busy||sy.pend||sy.dirty)return;const a=document.activeElement;if(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return;
+ try{const r=await pull();if(r&&r.rev>REV){useRemote(r);syMsg('↻ Mis à jour');if(S.eff&&S.eff.t>EFFSEEN){EFFSEEN=S.eff.t;gtNotice(EFF_MSG)}}}catch(e){if(!denied(e)&&e.message!=='AUTH')syMsg('⚠️ Hors ligne','var(--dng)')}}
+function showLogin(msg,later){let o=$('#lg');if(!o){o=document.createElement('div');o.id='lg';document.body.appendChild(o)}
+ const need=!CFG;
+ o.innerHTML=`<div class="lgb"><h2>🔒 Connexion à GESTIME</h2><p class="mut lgt">${WEB?'Une seule fois sur ce téléphone : ensuite GESTIME reste connecté.':'Une seule fois sur ce poste : ensuite GESTIME reste connecté, même après avoir éteint le PC.'}</p>${need?'<input id="lgc" type="text" placeholder="Code d’accès (GT1-…)" autocomplete="off" autocapitalize="off" spellcheck="false">':''}<input id="lge" type="email" placeholder="E-mail" autocomplete="username" autocapitalize="off"><input id="lgp" type="password" placeholder="Mot de passe" autocomplete="current-password"><button class="pri" id="lgo">Se connecter</button>${later?'<button id="lgl" class="lgl">Plus tard</button>':''}<div class="mut" id="lgm">${msg||''}</div></div>`}
+async function doLogin(){const m=$('#lgm'),c=$('#lgc');let nc=null;
+ if(!CFG){nc=cfgCode(c&&c.value);if(!nc){m.textContent='Code d’accès incorrect : collez-le en entier (il commence par GT1-).';return}CFG=nc}
+ const em=$('#lge').value.trim(),pw=$('#lgp').value;if(!em||!pw){m.textContent='Tapez l’e-mail et le mot de passe.';return}
+ m.textContent='Connexion…';$('#lgo').disabled=true;
+ try{await sbAuth({email:em,password:pw},'password');if(nc)try{localStorage.setItem(CFG_K,JSON.stringify(nc))}catch(e){}
+  $('#lg').remove();acct();LIVE=false;clearInterval(pt);await afterLogin()}
+ catch(e){if(nc)CFG=null;const b=$('#lgo');if(b)b.disabled=false;m.textContent=e.message==='OFFLINE'?'Pas de connexion internet : réessayez.':'Connexion refusée : '+e.message+'.'}}
+function doLogout(b){if(!b.dataset.ok){b.dataset.ok='1';b.textContent='Confirmer la déconnexion ?';setTimeout(()=>{if(b.isConnected){delete b.dataset.ok;b.textContent='Se déconnecter'}},4000);return}
+ try{localStorage.removeItem(SK);localStorage.removeItem(SK+'-mail')}catch(e){}location.reload()}
+// Rubrique « Compte » des réglages
+function acct(){const a=$('#acc');if(!a||!CFG){if(a)a.style.display='none';return}a.style.display='';let ml='';try{ml=localStorage.getItem(SK+'-mail')||''}catch(e){}
+ const on=!!RT;$('#accm').textContent=on?'Connecté : '+(ml||'oui'):'Pas connecté';$('#lgi').style.display=on?'none':'';$('#lgx').style.display=on?'':'none'}
+async function afterLogin(){clearTimeout(RETRY);try{const sv=baseLoad();
+ if(sv&&strip(S)!==strip(JSON.parse(sv.base))){REV=sv.rev;BASE=sv.base;sy.dirty=false;await push()}
+ else{const r=await pull();if(!r)throw new Error('magasin '+STORE.name+' absent de la base en ligne (lancez le script SQL)');
+  if(r.rev===0&&!(r.data&&r.data.emps)){REV=r.rev;await push()}else{useRemote(r);EFFSEEN=(S.eff&&S.eff.t)||0;syMsg('✓ Synchronisé')}}
+ if(!ANON&&!RT)return;LIVE=true;clearInterval(pt);pt=setInterval(poll,15000)}
+ catch(e){if(denied(e)||e.message==='AUTH')return;syMsg(e.message==='OFFLINE'?'⚠️ Hors ligne : modifications gardées sur cet appareil':'⚠️ '+e.message,'var(--dng)');RETRY=setTimeout(afterLogin,30000)}}
+async function boot(){if(!CFG){if(WEB){acct();showLogin('',false)}else syMsg('⚠️ Synchronisation non réglée','x');return}
  let saved=null;try{saved=localStorage.getItem(SK)}catch(e){}
- if(saved){try{RT=saved;EXP=0;await sbAuth({refresh_token:saved},'refresh_token');await afterLogin();return}catch(e){}}
- showLogin()}
+ if(saved){RT=saved;EXP=0;ANON=false;acct();await afterLogin();return}
+ if(WEB){acct();showLogin('',false);return}
+ // PC pas encore connecté : la synchronisation continue comme avant (accès libre) tant que la base l'accepte, et la connexion est proposée.
+ ANON=true;TOK=CFG.key;EXP=Infinity;acct();showLogin('',true);await afterLogin()}
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='lgp')doLogin()});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(LIVE)poll();else if(CFG&&(RT||ANON)&&!sy.busy)afterLogin()}});
+window.addEventListener('online',()=>{if(!LIVE&&CFG&&(RT||ANON))afterLogin();else if(sy.dirty&&!sy.busy)push()});
 
 // ===== HISTORIQUE (annuler / rétablir) =====
 var hist=null,hi=0;
@@ -1285,6 +1323,18 @@ document.addEventListener('scroll',()=>{if(!NAVK)return;clearTimeout(NAVT);NAVT=
 window.addEventListener('beforeunload',()=>{navGrab();navStore()});
 render();
 boot();
+
+// ===== MISE À JOUR de la version téléphone / navigateur (v46) =====
+// La page vient de GitHub Pages : on compare avec version.json et on recharge toute seule (jamais pendant une saisie).
+(function(){if(window.api)return;const cur=+((document.querySelector('meta[name="gt-version"]')||{}).content||0);
+ const bl=document.getElementById('updb'),ub=document.getElementById('upb'),um=document.getElementById('upm');
+ if(location.protocol==='https:'&&bl){bl.style.display='';if(ub)ub.style.display='none';if(um)um.textContent='Version '+cur+' : se met à jour toute seule.'}
+ async function chk(){if(document.hidden||location.protocol!=='https:')return;try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json(),v=+j.version;if(!(v>cur))return;
+  const a=document.activeElement;if(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return;if(document.getElementById('lg')&&document.getElementById('lge')&&document.getElementById('lge').value)return;if(typeof sy!=='undefined'&&(sy.busy||sy.pend))return;
+  let t=null;try{t=JSON.parse(localStorage.getItem('gt-webupd')||'null')}catch(e){}if(t&&t.v===v&&Date.now()-t.t<300000)return;
+  try{localStorage.setItem('gt-webupd',JSON.stringify({v,t:Date.now()}))}catch(e){}
+  try{if(typeof localSave==='function')localSave();navGrab();navStore()}catch(e){}location.replace(location.pathname+'?v='+v)}catch(e){}}
+ setTimeout(chk,4000);setInterval(chk,600000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(chk,1500)})})();
 
 // ===== MISE À JOUR du logiciel (version PC) =====
 (function(){if(!window.api||!window.api.updateCheck)return;
