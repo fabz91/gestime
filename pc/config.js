@@ -7,6 +7,6 @@ window.SYNC = {
   updateUrl: "https://raw.githubusercontent.com/fabz91/gestime/main/",
   url: "",
   key: ""
-  // Depuis la v46 : connexion e-mail + mot de passe une seule fois par poste (compte créé dans Supabase),
-  // puis le logiciel reste connecté. Rien à changer ici.
+  // Pas de mot de passe : le logiciel s'ouvre directement.
+  // (Pour exiger une connexion plus tard : ajouter  login: true  et créer des comptes dans Supabase.)
 };
