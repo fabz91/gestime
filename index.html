@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="61">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
-<link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
+<meta name="gt-version" content="62">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GES"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
+<link rel="apple-touch-icon" href="ges-icon.png"><script>/* v62 : l'icône GES rouvre le dernier logiciel utilisé (GESTIME ou GESMAR) */try{if(!window.api&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches)&&!document.referrer&&!sessionStorage.getItem('ges-go')&&localStorage.getItem('ges-app')==='gesmar'){sessionStorage.setItem('ges-go','1');location.replace('../gesmar/')}sessionStorage.setItem('ges-go','1')}catch(e){}</script><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -250,6 +250,8 @@ select[data-auto]{font-style:italic}
 /* titre en deux lignes */
 .top h1.brand{display:flex;align-items:center;gap:10px;line-height:1}
 .brand .bi{width:56px;height:56px;flex:none}
+.bisw{position:relative;display:inline-flex;flex:none;cursor:pointer;-webkit-tap-highlight-color:transparent}.bisw .sw{position:absolute;left:-6px;bottom:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1.5px solid #237a3b;color:#237a3b;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.25)}.bisw .sw svg{width:12px;height:12px}
+
 .brand .bt{display:flex;flex-direction:column;gap:5px}
 .brand b{font-size:25px;font-weight:800;letter-spacing:.01em}
 .brand i{font-style:normal;font-size:19px;font-weight:700;color:var(--acc);letter-spacing:.14em;text-transform:uppercase}
@@ -891,6 +893,13 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b
   const ok=()=>{$('#cp').textContent='Copié ✓'};try{navigator.clipboard.writeText(txt).then(ok,()=>{$('#cp').textContent='Copie impossible'})}catch(e){$('#cp').textContent='Copie impossible'}}});
 // ===== SYNCHRONISATION (Supabase) =====
 const WEB=!window.api,CFG_K='gt-cfg';
+
+// v62 : une seule icône « GES » sur le téléphone : toucher l'icône GESTIME passe à GESMAR Web (même adresse, même connexion, même magasin)
+(function(){if(window.api)return;try{localStorage.setItem('ges-app','gestime')}catch(e){}
+ const bi=document.querySelector('.brand .bi');if(!bi)return;const w=document.createElement('span');w.className='bisw';w.setAttribute('role','button');w.tabIndex=0;w.title='Passer à GESMAR';w.setAttribute('aria-label','Passer à GESMAR');
+ bi.parentNode.insertBefore(w,bi);w.appendChild(bi);w.insertAdjacentHTML('beforeend','<span class="sw" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span>');
+ const go=e=>{if(e)e.preventDefault();try{localStorage.setItem('ges-app','gesmar');localStorage.setItem('gesmar.store',STORE.id)}catch(_){}location.href='../gesmar/'};
+ w.addEventListener('click',go);w.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e)})})();
 // Réglages Supabase : config.js sur PC ; sur téléphone, « code d'accès » collé une seule fois (jamais dans le dépôt public).
 function cfgRead(){if(window.SYNC&&window.SYNC.url&&window.SYNC.key&&!/VOTRE/.test(window.SYNC.url))return window.SYNC;try{const c=JSON.parse(localStorage.getItem(CFG_K)||'null');if(c&&c.url&&c.key)return c}catch(e){}return null}
 function cfgCode(t){const m=/^GT1-([A-Za-z0-9+/=_-]+)$/.exec(String(t||'').replace(/\s+/g,''));if(!m)return null;try{const p=atob(m[1].replace(/-/g,'+').replace(/_/g,'/')).split('|');if(/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(p[0])&&p[1])return{url:p[0],key:p[1]}}catch(e){}return null}
@@ -905,9 +914,11 @@ async function sbAuth(body,grant){let r;try{r=await fetch(CFG.url+'/auth/v1/toke
  const j=await r.json().catch(()=>({}));
  if(!r.ok){const t=String(j.error_description||j.msg||j.message||''),x=new Error(/invalid login|invalid_credentials|invalid_grant/i.test(t+' '+(j.error_code||j.code||j.error||''))&&grant==='password'?'identifiant ou mot de passe incorrect':/email not confirmed/i.test(t)?'compte pas encore confirmé (cochez « Auto Confirm User » dans Supabase)':(t||'refusé'));x.st=r.status||400;throw x}
  TOK=j.access_token;RT=j.refresh_token;EXP=Date.now()+(j.expires_in||3600)*1000;ANON=false;
- try{localStorage.setItem(SK,RT);if(j.user&&j.user.email)localStorage.setItem(SK+'-mail',j.user.email)}catch(e){}}
-function refresh(){if(!AUTHP)AUTHP=sbAuth({refresh_token:RT},'refresh_token').finally(()=>{AUTHP=null});return AUTHP}
-function authLost(msg){TOK=null;RT=null;EXP=0;LIVE=false;clearInterval(pt);try{localStorage.removeItem(SK)}catch(e){}acct();showLogin(msg||'Session terminée : reconnectez-vous.',false)}
+ try{localStorage.setItem(SK,RT);localStorage.setItem(SK+'-at',JSON.stringify({t:TOK,e:EXP}));if(j.user&&j.user.email)localStorage.setItem(SK+'-mail',j.user.email)}catch(e){}}
+// v62 : session commune avec GESMAR Web (même adresse) : on reprend le jeton déjà renouvelé par l'autre logiciel
+function refresh(){try{const o=JSON.parse(localStorage.getItem(SK+'-at')||'null'),r=localStorage.getItem(SK);if(o&&o.t&&o.t!==TOK&&o.e>Date.now()+60000){TOK=o.t;EXP=o.e;if(r)RT=r;return Promise.resolve()}if(r&&r!==RT)RT=r}catch(e){}
+ if(!AUTHP)AUTHP=sbAuth({refresh_token:RT},'refresh_token').finally(()=>{AUTHP=null});return AUTHP}
+function authLost(msg){TOK=null;RT=null;EXP=0;LIVE=false;clearInterval(pt);try{localStorage.removeItem(SK);localStorage.removeItem(SK+'-at')}catch(e){}acct();showLogin(msg||'Session terminée : reconnectez-vous.',false)}
 async function sbReq(path,opt,again){
  if(!ANON&&RT&&Date.now()>EXP-60000){try{await refresh()}catch(e){if(e.message==='OFFLINE')throw e;authLost();throw new Error('AUTH')}}
  if(!ANON&&!TOK)throw new Error('AUTH');
@@ -964,7 +975,7 @@ async function doLogin(){const m=$('#lgm'),c=$('#lgc');let nc=null;
   $('#lg').remove();acct();LIVE=false;clearInterval(pt);await afterLogin()}
  catch(e){if(nc)CFG=null;const b=$('#lgo');if(b)b.disabled=false;m.textContent=e.message==='OFFLINE'?'Pas de connexion internet : réessayez.':'Connexion refusée : '+e.message+'.'}}
 function doLogout(b){if(!b.dataset.ok){b.dataset.ok='1';b.textContent='Confirmer la déconnexion ?';setTimeout(()=>{if(b.isConnected){delete b.dataset.ok;b.textContent='Se déconnecter'}},4000);return}
- try{localStorage.removeItem(SK);localStorage.removeItem(SK+'-mail')}catch(e){}location.reload()}
+ try{localStorage.removeItem(SK);localStorage.removeItem(SK+'-mail');localStorage.removeItem(SK+'-at')}catch(e){}location.reload()}
 // Rubrique « Compte » des réglages
 function acct(){const a=$('#acc');if(!a||!CFG){if(a)a.style.display='none';return}a.style.display='';let ml='';try{ml=localStorage.getItem(SK+'-mail')||''}catch(e){}
  const on=!!RT;$('#accm').textContent=on?'Connecté : '+(idShow(ml)||'oui'):'Pas connecté';$('#lgi').style.display=on?'none':'';$('#lgx').style.display=on?'':'none'}
