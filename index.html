@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="60">
+<meta name="gt-version" content="61">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
 <link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
@@ -750,6 +750,8 @@ function rpOtherRep(nm,a,b){const d=RPO.d;if(!d||!d.rep)return null;return Objec
 // v60 : doublon déjà créé dans les deux magasins (v57-v59) : CLAMART retire le sien s'il n'a pas de remplaçant
 function rpDedup(){if(!RPO.d||STORE.id!=='clamart')return 0;let n=0;rpAll().forEach(x=>{if(!x.src||(x.r||[]).some(r=>r.pid))return;const o=rpOtherRep(rpNk(x.nm),x.a,x.b);if(o&&o.src){delete S.rep[x.id];S.rpAuto[x.src]=1;n++}});return n}
 function rpBg(){try{if(rpAutoSync()+rpDedup())save();const m=$('#mr');if(m){const bl=rpBlink();m.classList.toggle('blink',bl);m.title=bl?'Congé à venir : choisissez un remplaçant':''}}catch(e){}}
+// v61 : FABIAN et DAMIEN (présents dans les deux magasins) = groupe « DIRECTION » dans REMPLACEMENT
+const RP_DIR=['FABIAN','DAMIEN'],rpIsDir=n=>RP_DIR.includes(rpNk(n));
 const rpNeed=x=>!!x.src&&x.b>=rpToday()&&!(x.r||[]).some(r=>r.pid);
 const rpBlink=()=>rpAll().some(rpNeed);
 // v54 : onglet REMPLACEMENT (PC et Web). Données : S.rep = { id: {id, pid, k:'e'|'i', mo:'cp'|'mal'|'abs', a, b, note, r:[{id, st, pid, nm, mag, a, b}], ap} }
@@ -796,16 +798,17 @@ function rpApply(x){
  else{const D=rpDaysOf(x);D.forEach(iso=>{const m=iso.slice(0,7),dd=String(+iso.slice(8,10));plAdd('stM',m,stD,x.pid);const k=S.staff.data[m]=S.staff.data[m]||{},q=k[x.pid]=k[x.pid]||{days:{}};q.days=q.days||{};q.days[dd]=x.mo==='abs'?{t:'abs',h:''}:{t:x.mo}});x.ap={t:x.mo,days:D}}}
 // ---- affichage ----
 function rpCard(x,ro,st){const unc=rpUncovered(x),reps=(x.r||[]).filter(r=>r.pid).sort((u,v)=>u.a<v.a?-1:1),old=x.b<rpToday();
- const li=reps.map(r=>{const bz=ro?[]:rpBusy(r);return `<li>➜ <b>${esc(r.nm)}</b> <span class="rpd">(${esc(rpStName(r.st))})</span> travaille à <b>${esc(rpStName(r.mag))}</b> ${rpRange(r.a,r.b)} <span class="rpd">· ${rpNb(r.a,r.b)} j</span>${bz.length?`<div class="rpa">⚠ ${esc(r.nm)} n’est pas disponible ${rpRunsTxt(bz)}</div>`:''}</li>`}).join('');
+ const li=reps.map(r=>{const bz=ro?[]:rpBusy(r);return `<li>➜ <b>${esc(r.nm)}</b> <span class="rpd">(${rpIsDir(r.nm)?'Direction':esc(rpStName(r.st))})</span> travaille à <b>${esc(rpStName(r.mag))}</b> ${rpRange(r.a,r.b)} <span class="rpd">· ${rpNb(r.a,r.b)} j</span>${bz.length?`<div class="rpa">⚠ ${esc(r.nm)} n’est pas disponible ${rpRunsTxt(bz)}</div>`:''}</li>`}).join('');
  const alert=unc.length?`<div class="rpa">⚠ Sans remplaçant : ${rpRunsTxt(unc)} (${unc.length} j)</div>`:reps.length?`<div class="rpa ok">✓ Toute la période est remplacée</div>`:'';
  const nm=ro?x.nm:((rpPeople(STORE.id).find(p=>p.id===x.pid)||{}).nm||x.nm||'?');
- return `<div class="rpc${old?' old':''}${ro?' ot':''}${!ro&&rpNeed(x)?' need':''}"><div class="rpt"><b>${esc(nm)}</b><span class="rpd">${RPK[x.k]}${st?' · '+esc(st):''}</span>${x.src?'<span class="rpsrc">automatique</span>':'<span class="rpsrc man">manuel</span>'}<span class="rpm ${x.mo}">${RPM[x.mo]}</span><span>${rpPTxt(x)} <span class="rpd">· ${rpDaysOf(x).length} j</span></span></div>
+ return `<div class="rpc${old?' old':''}${ro?' ot':''}${!ro&&rpNeed(x)?' need':''}"><div class="rpt"><b>${esc(nm)}</b><span class="rpd">${rpIsDir(x.nm||nm)?'Direction':RPK[x.k]}${st?' · '+esc(st):''}</span>${x.src?'<span class="rpsrc">automatique</span>':'<span class="rpsrc man">manuel</span>'}<span class="rpm ${x.mo}">${RPM[x.mo]}</span><span>${rpPTxt(x)} <span class="rpd">· ${rpDaysOf(x).length} j</span></span></div>
  ${x.note?`<div class="rpd" style="margin-top:4px">${esc(x.note)}</div>`:''}${li?`<ul class="rpl">${li}</ul>`:'<div class="rpd" style="margin-top:6px">Aucun remplaçant pour le moment.</div>'}${alert}
  ${ro?'':`<div class="rpb"><button data-rp="edit" data-id="${x.id}">✎ Modifier</button><button class="del" data-rp="del" data-id="${x.id}">${rpDel===x.id?'Confirmer ?':'Supprimer'}</button></div>`}</div>`}
 function rpOpts(L,cur){return L.map(g=>g[1].length?`<optgroup label="${esc(g[0])}">${g[1].map(p=>`<option value="${p[0]}"${p[0]===cur?' selected':''}>${esc(p[1])}</option>`).join('')}</optgroup>`:'').join('')}
 function rpEditor(){const x=rpd,P=rpPeople(STORE.id),abs=x.k&&x.pid?x.k+'|'+x.pid:'';
- const absO=`<option value="">— choisir —</option>`+rpOpts([['Employés',P.filter(p=>p.k==='e').map(p=>['e|'+p.id,p.nm])],['Intérims',P.filter(p=>p.k==='i').map(p=>['i|'+p.id,p.nm])]],abs);
- const G=[];STORES.forEach(s=>{const L=rpPeople(s.id).filter(p=>!(s.id===STORE.id&&p.id===x.pid));G.push([s.name+' — Employés',L.filter(p=>p.k==='e').map(p=>[s.id+'|'+p.id,p.nm])],[s.name+' — Intérims',L.filter(p=>p.k==='i').map(p=>[s.id+'|'+p.id,p.nm])])});
+ const absO=`<option value="">— choisir —</option>`+rpOpts([['Employés',P.filter(p=>p.k==='e'&&!rpIsDir(p.nm)).map(p=>['e|'+p.id,p.nm])],['Intérims',P.filter(p=>p.k==='i'&&!rpIsDir(p.nm)).map(p=>['i|'+p.id,p.nm])],['DIRECTION',P.filter(p=>rpIsDir(p.nm)).map(p=>[p.k+'|'+p.id,p.nm])]],abs);
+ const G=[],GD=[],absNm=rpNmOf(x.pid);[STORE,...STORES.filter(s=>s.id!==STORE.id)].forEach(s=>rpPeople(s.id).forEach(p=>{if(rpIsDir(p.nm)&&p.nm!==absNm&&!GD.some(q=>q[1]===p.nm))GD.push([s.id+'|'+p.id,p.nm])}));
+ STORES.forEach(s=>{const L=rpPeople(s.id).filter(p=>!(s.id===STORE.id&&p.id===x.pid)&&!rpIsDir(p.nm));G.push([s.name+' — Employés',L.filter(p=>p.k==='e').map(p=>[s.id+'|'+p.id,p.nm])],[s.name+' — Intérims',L.filter(p=>p.k==='i').map(p=>[s.id+'|'+p.id,p.nm])])});G.push(['DIRECTION',GD]);
  const rows=(x.r||[]).map((r,i)=>{const bz=rpBusy(r);return `<div class="rprow"><label class="w">Remplaçant<select data-rf="rp" data-ri="${i}"><option value="">— choisir —</option>${rpOpts(G,r.pid?r.st+'|'+r.pid:'')}</select></label>
   <label>Travaille à<select data-rf="mag" data-ri="${i}">${STORES.map(s=>`<option value="${s.id}"${s.id===r.mag?' selected':''}>${s.name}</option>`).join('')}</select></label>
   <label>Du<input type="date" data-rf="ra" data-ri="${i}" value="${r.a||''}" min="${x.a||''}" max="${x.b||''}"></label><label>Au<input type="date" data-rf="rb" data-ri="${i}" value="${r.b||''}" min="${x.a||''}" max="${x.b||''}"></label>
