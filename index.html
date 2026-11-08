@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="57">
+<meta name="gt-version" content="58">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
 <link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
@@ -726,9 +726,13 @@ function noteFix(){let n=0;const G=[...((S.emp&&S.emp.groups)||[]),...((S.cre&&S
 // v57 : un congé (onglet CONGÉS) qui commence dans les 14 jours crée tout seul son absence dans REMPLACEMENT (id 'a'+id du congé, même id sur tous les PC).
 // Supprimée par le gérant → ne revient pas (S.rpAuto). La pastille REMPLACEMENT clignote tant qu'une absence automatique n'a aucun remplaçant.
 function rpAutoSync(){if(!S||!S.leave)return 0;const T=rpToday(),L=addD(T,14),ids=new Set();let ch=0;S.rpAuto=S.rpAuto||{};
+ // v58 : un remplacement s'efface tout seul après sa dernière date (ce qui a été noté dans CONGÉS / EMPLOYÉS reste)
+ rpAll().forEach(x=>{if(x.b&&x.b<T){delete S.rep[x.id];ch++}});
  for(const y in S.leave)for(const pid in (S.leave[y]||{}))(S.leave[y][pid]||[]).forEach(x=>{if(!x||!x.a||String(x.id).indexOf('rp')===0)return;ids.add(String(x.id));const b=x.b||x.a;if(x.a>L||b<T)return;
   const id='a'+x.id,r=S.rep&&S.rep[id];if(r){if(r.a!==x.a||r.b!==b){r.a=x.a;r.b=b;r.p=[{a:x.a,b}];ch++}return}
-  if(S.rpAuto[x.id])return;const e=S.staff.people.find(q=>q.id===pid),i=e?null:S.emps.find(q=>q.id===pid);if(!e&&!i)return;
+  if(S.rpAuto[x.id])return;
+  // v58 : la personne a déjà une absence dans REMPLACEMENT sur ces dates → on ne crée rien
+  if(rpAll().some(o=>o.pid===pid&&rpDaysOf(o).some(d=>d>=x.a&&d<=b)))return;const e=S.staff.people.find(q=>q.id===pid),i=e?null:S.emps.find(q=>q.id===pid);if(!e&&!i)return;
   S.rep=S.rep||{};S.rep[id]={id,pid,k:e?'e':'i',nm:String((e||i).name||'').toUpperCase(),mo:'cp',a:x.a,b,p:[{a:x.a,b}],note:'',r:[],src:String(x.id)};S.rpAuto[x.id]=1;ch++});
  rpAll().forEach(x=>{if(x.src&&!ids.has(x.src)&&!(x.r||[]).some(r=>r.pid)){delete S.rep[x.id];ch++}});return ch}
 const rpNeed=x=>!!x.src&&x.b>=rpToday()&&!(x.r||[]).some(r=>r.pid);
@@ -779,7 +783,7 @@ function rpCard(x,ro,st){const unc=rpUncovered(x),reps=(x.r||[]).filter(r=>r.pid
  const li=reps.map(r=>{const bz=ro?[]:rpBusy(r);return `<li>➜ <b>${esc(r.nm)}</b> <span class="rpd">(${esc(rpStName(r.st))})</span> travaille à <b>${esc(rpStName(r.mag))}</b> ${rpRange(r.a,r.b)} <span class="rpd">· ${rpNb(r.a,r.b)} j</span>${bz.length?`<div class="rpa">⚠ ${esc(r.nm)} n’est pas disponible ${rpRunsTxt(bz)}</div>`:''}</li>`}).join('');
  const alert=unc.length?`<div class="rpa">⚠ Sans remplaçant : ${rpRunsTxt(unc)} (${unc.length} j)</div>`:reps.length?`<div class="rpa ok">✓ Toute la période est remplacée</div>`:'';
  const nm=ro?x.nm:((rpPeople(STORE.id).find(p=>p.id===x.pid)||{}).nm||x.nm||'?');
- return `<div class="rpc${old?' old':''}${ro?' ot':''}${!ro&&rpNeed(x)?' need':''}"><div class="rpt"><b>${esc(nm)}</b><span class="rpd">${RPK[x.k]}${st?' · '+esc(st):''}</span>${x.src?'<span class="rpsrc">depuis CONGÉS</span>':''}<span class="rpm ${x.mo}">${RPM[x.mo]}</span><span>${rpPTxt(x)} <span class="rpd">· ${rpDaysOf(x).length} j</span></span></div>
+ return `<div class="rpc${old?' old':''}${ro?' ot':''}${!ro&&rpNeed(x)?' need':''}"><div class="rpt"><b>${esc(nm)}</b><span class="rpd">${RPK[x.k]}${st?' · '+esc(st):''}</span>${x.src?'<span class="rpsrc">automatique</span>':''}<span class="rpm ${x.mo}">${RPM[x.mo]}</span><span>${rpPTxt(x)} <span class="rpd">· ${rpDaysOf(x).length} j</span></span></div>
  ${x.note?`<div class="rpd" style="margin-top:4px">${esc(x.note)}</div>`:''}${li?`<ul class="rpl">${li}</ul>`:'<div class="rpd" style="margin-top:6px">Aucun remplaçant pour le moment.</div>'}${alert}
  ${ro?'':`<div class="rpb"><button data-rp="edit" data-id="${x.id}">✎ Modifier</button><button class="del" data-rp="del" data-id="${x.id}">${rpDel===x.id?'Confirmer ?':'Supprimer'}</button></div>`}</div>`}
 function rpOpts(L,cur){return L.map(g=>g[1].length?`<optgroup label="${esc(g[0])}">${g[1].map(p=>`<option value="${p[0]}"${p[0]===cur?' selected':''}>${esc(p[1])}</option>`).join('')}</optgroup>`:'').join('')}
@@ -793,7 +797,7 @@ function rpEditor(){const x=rpd,P=rpPeople(STORE.id),abs=x.k&&x.pid?x.k+'|'+x.pi
  const unc=x.a?rpUncovered(x):[];
  const dest=!x.pid?'':x.k==='i'?'Intérim : seulement « Congé », noté dans CONGÉS.':x.mo==='cp'?'Sera noté dans CONGÉS (et visible dans EMPLOYÉS).':'Sera noté dans EMPLOYÉS : « '+RPM[x.mo]+' » chaque jour.';
  return `<div class="rpe"><h3>${x.id&&S.rep&&S.rep[x.id]?'Modifier le remplacement':'Nouvelle absence'}</h3>
- ${x.src?`<p style="margin:0 0 6px"><b>${esc(x.nm||'')}</b> <span class="rpd">${RPK[x.k]||''}</span> <span class="rpm cp">Congé</span> ${rpPTxt(x)} <span class="rpsrc">depuis CONGÉS</span></p><p class="rpi" style="margin:0 0 6px">Les dates se changent dans l’onglet CONGÉS.</p>`:`<div class="rpg"><label class="w">Personne absente (${esc(STORE.name)})<select data-rf="abs">${absO}</select></label>
+ ${x.src?`<p style="margin:0 0 6px"><b>${esc(x.nm||'')}</b> <span class="rpd">${RPK[x.k]||''}</span> <span class="rpm cp">Congé</span> ${rpPTxt(x)} <span class="rpsrc">automatique</span></p><p class="rpi" style="margin:0 0 6px">Les dates se changent dans l’onglet CONGÉS.</p>`:`<div class="rpg"><label class="w">Personne absente (${esc(STORE.name)})<select data-rf="abs">${absO}</select></label>
  <label>Motif<select data-rf="mo">${Object.keys(RPM).filter(k=>x.k!=='i'||k==='cp').map(k=>`<option value="${k}"${k===x.mo?' selected':''}>${RPM[k]}</option>`).join('')}</select></label>
  <label class="w">Note<input type="text" data-rf="note" value="${esc(x.note||'')}" placeholder="facultatif"></label></div>
  <div class="rpr"><b>Périodes d’absence</b>${rpP(x).map((p,i)=>`<div class="rprow"><label>Du<input type="date" data-rf="pa" data-pi="${i}" value="${p.a||''}"></label><label>Au<input type="date" data-rf="pb" data-pi="${i}" value="${p.b||''}" min="${p.a||''}"></label>${rpP(x).length>1?`<button class="x del" data-rp="pdel" data-i="${i}" title="Retirer cette période">✕</button>`:''}</div>`).join('')}
