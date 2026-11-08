@@ -1,7 +1,7 @@
 {
   "name": "horaires",
   "productName": "GESTIME",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "GESTIME : gestion des horaires, employés, intérim et congés",
   "main": "main.js",
   "scripts": {

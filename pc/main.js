@@ -2,12 +2,38 @@ const { app, BrowserWindow, ipcMain, dialog, shell, Menu, net } = require('elect
 const path = require('path');
 const fs = require('fs');
 
-// Garde le même dossier de données qu'avant le changement de nom (%APPDATA%\Horaires)
-app.setPath('userData', path.join(app.getPath('appData'), 'Horaires'));
+// 1.2.0 (08/11/2026) : comme GESMAR et GESCOUNT, tout est dans %APPDATA%\GESTIME et les données dans %APPDATA%\GESTIME\donnees
+// (fichiers gestime-bredis.json, gestime-clamart.json, dossier sauvegardes). Au premier lancement, l'ancien dossier
+// %APPDATA%\Horaires est recopié (connexion G20, réglages et données gardés), vérifié, puis supprimé.
+const OLD_DIR = path.join(app.getPath('appData'), 'Horaires');
+const NEW_DIR = path.join(app.getPath('appData'), 'GESTIME');
+const DATA_DIR = path.join(NEW_DIR, 'donnees');
+function migrate() {
+  try {
+    if (!fs.existsSync(OLD_DIR)) return;
+    if (!fs.existsSync(NEW_DIR)) fs.cpSync(OLD_DIR, NEW_DIR, { recursive: true });
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    let ok = true;
+    for (const f of fs.readdirSync(NEW_DIR)) {
+      const m = /^horaires-data(?:-([a-z0-9]+))?\.json$/i.exec(f);
+      if (!m) continue;
+      const to = path.join(DATA_DIR, 'gestime-' + (m[1] || 'bredis').toLowerCase() + '.json');
+      if (!fs.existsSync(to)) fs.copyFileSync(path.join(NEW_DIR, f), to);
+      if (fs.statSync(to).size !== fs.statSync(path.join(NEW_DIR, f)).size) { ok = false; continue; }
+      fs.unlinkSync(path.join(NEW_DIR, f));
+    }
+    const ob = path.join(NEW_DIR, 'sauvegardes'), nb = path.join(DATA_DIR, 'sauvegardes');
+    if (fs.existsSync(ob)) { if (!fs.existsSync(nb)) fs.renameSync(ob, nb); else fs.rmSync(ob, { recursive: true, force: true }); }
+    // L'ancien dossier n'est supprimé que si les données sont bien dans le nouveau.
+    if (ok && fs.existsSync(path.join(DATA_DIR, 'gestime-bredis.json'))) fs.rmSync(OLD_DIR, { recursive: true, force: true });
+  } catch (e) {}
+}
+migrate();
+app.setPath('userData', NEW_DIR);
 
-const dataDir = () => app.getPath('userData');
+const dataDir = () => DATA_DIR;
 const sid = (s) => (String(s || 'bredis').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bredis');
-const dataFile = (s) => path.join(dataDir(), sid(s) === 'bredis' ? 'horaires-data.json' : 'horaires-data-' + sid(s) + '.json');
+const dataFile = (s) => path.join(dataDir(), 'gestime-' + sid(s) + '.json');
 
 // Copie de sécurité automatique : une par jour, les 30 dernières sont gardées
 function backup(json, s) {
@@ -60,7 +86,7 @@ ipcMain.handle('autobackup', (e, text) => { try { return autoBackupWrite(dataDir
 ipcMain.handle('export', async (e, json, s) => {
   const r = await dialog.showSaveDialog({
     defaultPath: 'horaires-' + sid(s) + '-' + new Date().toISOString().slice(0, 10) + '.json',
-    filters: [{ name: 'Sauvegarde Horaires', extensions: ['json'] }]
+    filters: [{ name: 'Sauvegarde GESTIME', extensions: ['json'] }]
   });
   if (r.canceled || !r.filePath) return false;
   fs.writeFileSync(r.filePath, json);
@@ -70,7 +96,7 @@ ipcMain.handle('export', async (e, json, s) => {
 ipcMain.handle('import', async () => {
   const r = await dialog.showOpenDialog({
     properties: ['openFile'],
-    filters: [{ name: 'Sauvegarde Horaires', extensions: ['json'] }]
+    filters: [{ name: 'Sauvegarde GESTIME', extensions: ['json'] }]
   });
   if (r.canceled || !r.filePaths[0]) return null;
   return fs.readFileSync(r.filePaths[0], 'utf8');
@@ -87,9 +113,9 @@ ipcMain.handle('print', (e) => new Promise((resolve) => {
 
 
 // ===== Mise à jour sans réinstaller =====
-// La page index.html téléchargée est rangée dans %APPDATA%\Horaires\app ; elle est utilisée
+// La page index.html téléchargée est rangée dans %APPDATA%\GESTIME\app ; elle est utilisée
 // seulement si sa version est plus récente que celle de l'installateur.
-const appDir = () => path.join(dataDir(), 'app');
+const appDir = () => path.join(NEW_DIR, 'app');
 const verOf = (f) => { try { const m = /name="gt-version"\s+content="(\d+)"/.exec(fs.readFileSync(f, 'utf8').slice(0, 4000)); return m ? +m[1] : 0; } catch (e) { return 0; } };
 function pickPage() {
   const b = path.join(__dirname, 'index.html'), u = path.join(appDir(), 'index.html');

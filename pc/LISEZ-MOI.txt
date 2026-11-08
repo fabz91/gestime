@@ -21,11 +21,13 @@ Pour créer l'installateur (.exe) :
   3. Double-clic dessus pour installer, une icône apparaît sur le bureau
 
 Où sont les données ?
-  Dans  %APPDATA%\Horaires\horaires-data.json
-  Une copie de sécurité par jour est faite dans  %APPDATA%\Horaires\sauvegardes
-  (les 30 dernières sont gardées). Le bouton "Dossier des données" l'ouvre.
-  Le bouton "Exporter" crée un fichier à ranger sur une clé USB ou un cloud,
-  et "Importer" le remet en place (ex. sur un autre PC).
+  Dans  %APPDATA%\GESTIME\donnees  (gestime-bredis.json, gestime-clamart.json),
+  comme GESMAR et GESCOUNT. Le bouton "Dossier des données" l'ouvre.
+  Sauvegarde automatique : chaque jour, un fichier GESTIME-AAAA-MM-JJ.json avec les
+  deux magasins dans  %APPDATA%\GESTIME\donnees\sauvegardes  (60 jours gardés),
+  réimportable par "Importer".
+  Depuis la 1.2.0, l'ancien dossier %APPDATA%\Horaires est déplacé tout seul au
+  premier lancement (connexion et données gardées), puis supprimé.
 
 Si Windows affiche "Windows a protégé votre ordinateur" à l'installation :
   cliquer sur "Informations complémentaires" puis "Exécuter quand même".
@@ -34,19 +36,3 @@ Si Windows affiche "Windows a protégé votre ordinateur" à l'installation :
 Mettre à jour plus tard : remplacer index.html, puis relancer "npm run build".
 Les données ne sont pas touchées.
 
-Note : le logiciel s'appelle maintenant GESTIME, mais ses donnees restent dans
-  %APPDATA%\Horaires (rien n'est perdu). Si l'ancien logiciel "Horaires" reste installe
-  a cote, vous pouvez le desinstaller depuis Windows (Parametres > Applications).
-
-Impression : le bouton Imprimer (dans Creation) ouvre la fenetre d'impression de Windows.
-  Il faut utiliser les fichiers main.js, preload.js et index.html de la derniere version.
-  La page hebergee par Claude peut bloquer l'impression : utilisez le logiciel PC.
-
-
-Donnees incluses
-  - Cette version contient deja les donnees BREDIS (export du 8 octobre) et CLAMART (plannings, conges, horaires interim, employes).
-  - Au premier lancement de chaque magasin, elles remplacent les donnees locales ; l'ancienne copie est gardee dans le dossier de donnees (fichier ...avantmaj.json).
-  - Ensuite, vos modifications sont conservees normalement.
-
-
-Mises a jour sans reinstaller : voir LISEZ-MOI-MISE-A-JOUR.txt
