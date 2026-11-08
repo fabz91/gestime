@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="47">
+<meta name="gt-version" content="48">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -865,8 +865,12 @@ function crImp(){
  if(!C.imp['mag-vacs']){C.imp['mag-vacs']=1;const MG=['CLAMART','CLAMART','CLAMART','LONGJUMEAU','CLAMART'];
   C.list.filter(x=>String(x.name).toUpperCase()==='PLANNING VACS FAB - DAM').forEach(x=>(x.groups||[]).forEach(g=>(g.people||[]).forEach(q=>{if(String(q.name).replace(/\s/g,'').toUpperCase()!=='DAM/FAB')return;
    MG.forEach((m,d)=>{q.days[d]=q.days[d]||{};q.days[d].mag=m});q.note='Du 13/07/26 au 26/07/26'})))}
+ // v48 : DAM / FAB le lundi = LONGJUMEAU (et non CLAMART), demande du gérant 08/11 ; une fois par magasin
+ if(!C.imp['mag-vacs2']){C.imp['mag-vacs2']=1;
+  C.list.filter(x=>String(x.name).toUpperCase()==='PLANNING VACS FAB - DAM').forEach(x=>(x.groups||[]).forEach(g=>(g.people||[]).forEach(q=>{if(String(q.name).replace(/\s/g,'').toUpperCase()!=='DAM/FAB')return;
+   q.days=q.days||{};q.days[0]=q.days[0]||{};q.days[0].mag='LONGJUMEAU'})))}
  add2('imp2-vacs','PLANNING VACS FAB - DAM',[
-  P('iv1','DAM / FAB',{0:X(D(H,'14h00','15h00','20h00'),{mag:'CLAMART'}),1:X(D(H,'16h30'),{mag:'CLAMART'}),2:X(D(H,'14h00','15h00','20h00'),{mag:'CLAMART'}),3:X(D(H,'14h00','15h00','20h00'),{mag:'LONGJUMEAU'}),4:X(D(H,'16h30'),{mag:'CLAMART'})},'Du 13/07/26 au 26/07/26'),
+  P('iv1','DAM / FAB',{0:X(D(H,'14h00','15h00','20h00'),{mag:'LONGJUMEAU'}),1:X(D(H,'16h30'),{mag:'CLAMART'}),2:X(D(H,'14h00','15h00','20h00'),{mag:'CLAMART'}),3:X(D(H,'14h00','15h00','20h00'),{mag:'LONGJUMEAU'}),4:X(D(H,'16h30'),{mag:'CLAMART'})},'Du 13/07/26 au 26/07/26'),
   P('iv2','BRUNO',{0:D(H,'13h30','15h00','20h00'),1:D(0,0,'16h00','20h00'),3:D(H,'13h30','15h00','20h00'),4:D(0,0,'16h00','20h00'),5:D(H,'13h30','15h00','20h00'),6:D(H,'13h30','15h00','20h00')}),
   P('iv3','LAURENT',{1:D(H,'13h30','15h00','20h00'),2:D(H,'13h30','15h00','20h00'),4:D(H,'13h30','15h00','20h00'),5:D(H,'13h30','15h00','20h00'),6:D(H,'13h30','15h00','20h00')})])}
 function crInit(){if(!S.cre||!S.cre.cur)S.cre={list:[],curId:null,cur:crBlank()};crNorm(S.cre.cur);S.cre.list.forEach(crNorm);crImp()}
