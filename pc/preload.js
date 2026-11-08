@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('api', {
   save: (s, json) => ipcRenderer.send('save', s, json),
   exportData: (json, s) => ipcRenderer.invoke('export', json, s),
   importData: () => ipcRenderer.invoke('import'),
+  autoBackup: (text) => ipcRenderer.invoke('autobackup', text),
   openFolder: () => ipcRenderer.invoke('openFolder'),
   print: () => ipcRenderer.invoke('print'),
   updateInfo: () => ipcRenderer.invoke('update-info'),

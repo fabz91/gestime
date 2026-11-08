@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="58">
+<meta name="gt-version" content="59">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
 <link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
@@ -711,6 +711,11 @@ function storeLocal(st){const k=st.id==='bredis'?'horaires-v1':'horaires-v1-'+st
 async function storeData(st){if(st.id===STORE.id)return S;
  try{if(CFG&&TOK){const a=await sbReq('store?id=eq.'+st.sid+'&select=data');if(a&&a[0]&&a[0].data&&a[0].data.emps)return a[0].data}}catch(e){}
  return storeLocal(st)}
+// v59 : sauvegarde automatique chaque jour (programme PC 1.1.0) : un fichier GESTIME-AAAA-MM-JJ.json avec les deux magasins,
+// au format de l'export (réimportable), dans « sauvegardes » du dossier des données ; 60 jours gardés. Refaite toutes les 2 h (le fichier du jour est remplacé).
+async function gtAutoBk(){if(!window.api||!window.api.autoBackup)return;try{const mag={};for(const st of STORES){const d=await storeData(st);if(d)mag[st.id]=d}
+ if(!mag[STORE.id])return;await window.api.autoBackup(JSON.stringify({app:'GESTIME',exporte:new Date().toISOString(),auto:true,magasins:mag},null,1))}catch(e){}}
+if(window.api&&window.api.autoBackup){setTimeout(gtAutoBk,60000);setInterval(gtAutoBk,2*3600e3)}
 async function doExport(){const mag={};for(const st of STORES){const d=await storeData(st);if(d)mag[st.id]=d}
  const j=JSON.stringify({app:'GESTIME',exporte:new Date().toISOString(),magasins:mag},null,1);
  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='GESTIME-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
