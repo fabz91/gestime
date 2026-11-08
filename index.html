@@ -386,6 +386,7 @@ table.int3 tr.dim td{border-bottom:2px solid #d0021b}
 .lvtri{width:18px;height:17px;margin-left:7px;vertical-align:-3px;animation:updBlink 1s infinite}
 .lvmsg{display:flex;gap:10px;align-items:flex-start;background:#fff4dc;border:1px solid #f2b440;color:#5a3a00;border-radius:10px;padding:10px 14px;margin:0 0 12px}
 .lvmsg .lvtri{animation:none;margin:2px 0 0;width:22px;height:20px;flex:0 0 22px}
+.lvmsg>div{flex:1}.lvok{flex:0 0 auto;align-self:center;background:#237a3b;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
 .lvmsg ul{margin:4px 0 0;padding-left:18px}.lvmsg li{margin:2px 0}.lvmsg .mut{color:#8a6a30}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lvmsg{background:#3a2e14;border-color:#8a6420;color:#ffe2a8}:root:not([data-theme="light"]) .lvmsg .mut{color:#d9b977}}
 [data-theme="dark"] .lvmsg{background:#3a2e14;border-color:#8a6420;color:#ffe2a8}[data-theme="dark"] .lvmsg .mut{color:#d9b977}
@@ -582,14 +583,14 @@ const LV_JOURS=14;
 function lvSoon(){const t=new Date(),iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
  const t0=iso(t),t1=iso(new Date(t.getFullYear(),t.getMonth(),t.getDate()+LV_JOURS)),out=[],seen=new Set();
  const who=pid=>{const e=S.staff.people.find(x=>x.id===pid);if(e)return{n:e.name,k:'Employé'};const i=S.emps.find(x=>x.id===pid);return i?{n:i.name,k:'Intérim'}:null};
- for(const y in (S.leave||{}))for(const pid in (S.leave[y]||{}))(S.leave[y][pid]||[]).forEach(x=>{if(!x.a||x.a<=t0||x.a>t1||seen.has(pid+x.a))return;seen.add(pid+x.a);const w=who(pid);if(!w)return;
-  out.push({n:w.n,k:w.k,a:x.a,b:x.b||x.a,j:Math.round((new Date(x.a+'T12:00:00')-new Date(t0+'T12:00:00'))/864e5)})});
+ for(const y in (S.leave||{}))for(const pid in (S.leave[y]||{}))(S.leave[y][pid]||[]).forEach(x=>{const key=pid+'|'+x.a+'|'+(x.b||x.a);if(!x.a||x.a<=t0||x.a>t1||seen.has(key)||(S.lvVu||[]).includes(key))return;seen.add(key);const w=who(pid);if(!w)return;
+  out.push({key,n:w.n,k:w.k,a:x.a,b:x.b||x.a,j:Math.round((new Date(x.a+'T12:00:00')-new Date(t0+'T12:00:00'))/864e5)})});
  return out.sort((p,q)=>p.a.localeCompare(q.a)||p.n.localeCompare(q.n))}
 const LVJ=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'],lvD=iso=>{const d=new Date(iso+'T12:00:00');return LVJ[d.getDay()]+' '+iso.slice(8,10)+'/'+iso.slice(5,7)};
 const LV_TRI='<svg class="lvtri" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 1.5 23 20.5H1z" fill="#f29d00" stroke="#c77800" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 8v6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.5" fill="#fff"/></svg>';
 function lvTab(){const L=lvSoon(),b=$('#mc');if(!b)return;b.innerHTML='Congés'+(L.length?LV_TRI:'');b.title=L.length?L.length+' congé'+(L.length>1?'s':'')+' dans les '+LV_JOURS+' jours':''}
 function lvMsg(){const L=lvSoon();if(!L.length)return'';
- return `<div class="lvmsg">${LV_TRI}<div><b>Congés dans les ${LV_JOURS} prochains jours</b><ul>${L.map(x=>`<li><b>${esc(x.n)}</b> <span class="mut">(${x.k})</span> : ${x.a===x.b?'le '+lvD(x.a):'du '+lvD(x.a)+' au '+lvD(x.b)} — ${x.j===1?'demain':'dans '+x.j+' jours'}</li>`).join('')}</ul></div></div>`}
+ return `<div class="lvmsg">${LV_TRI}<div><b>Congés dans les ${LV_JOURS} prochains jours</b><ul>${L.map(x=>`<li><b>${esc(x.n)}</b> <span class="mut">(${x.k})</span> : ${x.a===x.b?'le '+lvD(x.a):'du '+lvD(x.a)+' au '+lvD(x.b)} — ${x.j===1?'demain':'dans '+x.j+' jours'}</li>`).join('')}</ul></div><button class="lvok" data-act="lvvu" title="Ne plus afficher ces congés (le triangle disparaît aussi)">✓ Vu</button></div>`}
 function leaveView(){
  const G=[['EMPLOYÉS',LE(Y)],['INTÉRIMS',LI(Y)]],L=S.leave[Y]||{},cols=[];
  G.forEach((g,gi)=>{if(!g[1].length)cols.push({p:null,sep:gi>0});g[1].forEach((p,i)=>cols.push({p,sep:gi>0&&i===0,int:gi===1}))});
@@ -656,6 +657,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b
  if(b.id==='pm'||b.id==='nm'){M+=b.id==='pm'?-1:1;if(M<0){M=11;Y--}if(M>11){M=0;Y++}confirmDel=false;render()}
  else if(b.id==='tn'){if(epview!=='new')crOpen();epview='new';render()}else if(b.id==='tf'){if(mode==='leave')lview='flat';else if(mode==='ep')epview='flat';else if(mode==='emp')eview='flat';else view='flat';render()}else if(b.id==='tp'){if(mode==='emp')eview='one';else view='plan';render()}else if(b.id==='tr'){if(mode==='leave')lview='rec';else if(mode==='ep')epview='rec';else if(mode==='emp')eview='rec';else view='rec';render()}
  else if(b.dataset.act==='sel'){cur=b.dataset.id;confirmDel=false;render()}
+ else if(b.dataset.act==='lvvu'){const t=new Date(),t0=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');S.lvVu=(S.lvVu||[]).filter(k=>k.split('|')[1]>t0).concat(lvSoon().map(x=>x.key));save();render()} /* v52 : congés vus (synchronisé sur tous les appareils) */
  else if(b.dataset.act==='iprev'||b.dataset.act==='inext'){const L=MI(),i=L.findIndex(x=>x.id===cur),j=i+(b.dataset.act==='inext'?1:-1);if(L[j]){cur=L[j].id;render()}}
  else if(b.dataset.act==='add'){const id='e'+Date.now();S.emps.push({id,name:'NOUVEAU NOM'});intFix(key(Y,M)).push({id});plAdd('lvI',String(Y),liD(Y),id);cur=id;save();render();const i=$('#nm2')||document.querySelector('.nmf[data-id="'+id+'"]');if(i){i.focus();i.select()}}
  else if(b.dataset.act==='del'||b.dataset.act==='delx'){askDelete(mode==='leave'?'lvi':'intm',b.dataset.id||cur)}
