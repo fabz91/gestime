@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="51">
+<meta name="gt-version" content="52">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
 <link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
@@ -580,7 +580,8 @@ const edTxt=()=>{const n=dn({a:ed.a,b:ed.b});return ed.a?'Du '+fd2(ed.a)+' au '+
 const edHtml=()=>`<div class="edp" id="edp"><label>Du<input type="date" data-ed="a" value="${ed.a}"></label><label>Au<input type="date" data-ed="b" value="${ed.b}"></label><div class="edsum" id="edsum">${edTxt()}</div><div class="lrow"><button class="pri" data-la="save">OK</button>${ed.id?'<button class="del" data-la="del">Suppr.</button>':''}<button data-la="cancel">Annuler</button></div></div>`;
 // v52 : alerte congés — périodes de congé qui COMMENCENT dans les 14 jours (employés et intérims)
 const LV_JOURS=14;
-function lvSoon(){const t=new Date(),iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const LV_ON=()=>!!window.api; /* GESTIME PC seulement (décision du gérant 08/11) */
+function lvSoon(){if(!LV_ON())return[];const t=new Date(),iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
  const t0=iso(t),t1=iso(new Date(t.getFullYear(),t.getMonth(),t.getDate()+LV_JOURS)),out=[],seen=new Set();
  const who=pid=>{const e=S.staff.people.find(x=>x.id===pid);if(e)return{n:e.name,k:'Employé'};const i=S.emps.find(x=>x.id===pid);return i?{n:i.name,k:'Intérim'}:null};
  for(const y in (S.leave||{}))for(const pid in (S.leave[y]||{}))(S.leave[y][pid]||[]).forEach(x=>{const key=pid+'|'+x.a+'|'+(x.b||x.a);if(!x.a||x.a<=t0||x.a>t1||seen.has(key)||(S.lvVu||[]).includes(key))return;seen.add(key);const w=who(pid);if(!w)return;
