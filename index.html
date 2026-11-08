@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="50">
+<meta name="gt-version" content="51">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
 <link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
@@ -455,7 +455,7 @@ function fixCur(){const L=MI();if(!L.some(e=>e.id===cur))cur=L[0]&&L[0].id}
 function header(){$('#mo').innerHTML=MOIS.map((n,i)=>`<option value="${i}" ${i===M?'selected':''}>${n}</option>`).join('');$('#yr').value=Y;bkInfo()}
 const CPI='<input type="text" class="cpx" value="CP" readonly tabindex="-1" title="Congé posé dans l’onglet Congés" aria-label="Congé payé">';
 // v51 : TÉLÉPHONE (écran ≤ 640 px) — onglet Intérim : un seul intérim à la fois, choisi en haut (‹ liste ›)
-const PH=()=>matchMedia('(max-width:640px)').matches;
+const PH=()=>!window.api&&matchMedia('(max-width:640px)').matches; /* GESTIME Web seulement (jamais dans le programme PC) */
 function intPh(){
  fixCur();const L=MI(),e=L.find(x=>x.id===cur),n=dim(),k=key(Y,M),i=L.indexOf(e);
  const sel=`<div class="phsel"><button class="phnav" data-act="iprev" ${i<=0?'disabled':''} aria-label="Intérim précédent">‹</button><select id="isel" aria-label="Choisir l’intérim">${L.map(x=>`<option value="${x.id}" ${x.id===cur?'selected':''}>${esc(x.name)}</option>`).join('')}</select><button class="phnav" data-act="inext" ${i<0||i>=L.length-1?'disabled':''} aria-label="Intérim suivant">›</button></div>`;
