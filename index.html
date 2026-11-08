@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="gt-version" content="49">
+<meta name="gt-version" content="50">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GESTIME"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
 <link rel="apple-touch-icon" href="pc/icon.png"><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
@@ -616,8 +616,8 @@ let CFG=cfgRead();
 const SK='horaires-auth';let TOK=null,RT=null,EXP=0,REV=0,pt=null,ANON=false,LIVE=false,AUTHP=null,RETRY=null;const sy={busy:false,pend:false,dirty:false,timer:null};
 const SY_OK='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/><path d="M9 13.2l2.2 2.2L15.4 11"/></svg>',SY_KO='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/><path d="M4 4l16 16"/></svg>',SY_WT='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/></svg>';
 function syMsg(t,c){const i=document.getElementById('syi');if(!i)return;const st=c?'ko':(/^⏳/.test(t)?'wait':'ok');i.className='syi '+st;i.innerHTML=st==='ok'?SY_OK:st==='ko'?SY_KO:SY_WT;const s=document.getElementById('sync');if(s){s.textContent=/refaites/.test(t)?t:'';s.style.color=/refaites/.test(t)?'var(--dng)':''}i.title=st==='ok'?'Synchronisé avec les autres postes':st==='ko'?'Non synchronisé : '+String(t).replace(/^⚠️\s*/,''):'Synchronisation en cours…'}
-// v49 : on tape un IDENTIFIANT (ex. G20) ; Supabase veut une adresse : « g20@example.com » (adresse inventée, compte créé avec Auto Confirm).
-const ID_DOM='@example.com',idMail=v=>{v=String(v||'').trim().toLowerCase();return !v?'':v.includes('@')?v:v+ID_DOM},idShow=m=>String(m||'').toLowerCase().endsWith(ID_DOM)?String(m).slice(0,-ID_DOM.length).toUpperCase():m;
+// v49 : on tape un IDENTIFIANT (ex. G20) ; Supabase veut une adresse : « g20@hotmail.com » (adresse inventée, compte créé avec Auto Confirm).
+const ID_DOM='@hotmail.com',idMail=v=>{v=String(v||'').trim().toLowerCase();return !v?'':v.includes('@')?v:v+ID_DOM},idShow=m=>String(m||'').toLowerCase().endsWith(ID_DOM)?String(m).slice(0,-ID_DOM.length).toUpperCase():m;
 // Connexion (v46) : identifiant + mot de passe une seule fois par appareil, puis la session est gardée (jeton renouvelé tout seul).
 async function sbAuth(body,grant){let r;try{r=await fetch(CFG.url+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify(body)})}catch(e){throw new Error('OFFLINE')}
  const j=await r.json().catch(()=>({}));
