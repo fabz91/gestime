@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="gt-version" content="62">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GES"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#237a3b">
-<link rel="apple-touch-icon" href="ges-icon.png"><script>/* v62 : l'icône GES rouvre le dernier logiciel utilisé (GESTIME ou GESMAR) */try{if(!window.api&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches)&&!document.referrer&&!sessionStorage.getItem('ges-go')&&localStorage.getItem('ges-app')==='gesmar'){sessionStorage.setItem('ges-go','1');location.replace('../gesmar/')}sessionStorage.setItem('ges-go','1')}catch(e){}</script><link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="ges-icon.png"><script>/* v62 : l'icône GES rouvre le dernier logiciel utilisé (GESTIME ou GESMAR) */try{if(!window.api&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches)&&!document.referrer&&!sessionStorage.getItem('ges-go')&&/^(gesmar|gestat)$/.test(localStorage.getItem('ges-app'))){sessionStorage.setItem('ges-go','1');location.replace(localStorage.getItem('ges-app')==='gestat'?'../Gestat/':'../gesmar/')}sessionStorage.setItem('ges-go','1')}catch(e){}</script><link rel="manifest" href="manifest.webmanifest">
 <title>GESTIME</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e2e0d8;--acc:#1f6f5c;--accbg:#e3f1ed;--we:#f1efe8;--dng:#b3372f;--wk:#fff6dc;--rd:#fde3e0;--fe:#ece4fb;--hsb:#b9d7ff;--abb:#ffbfa3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -894,11 +894,21 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b
 // ===== SYNCHRONISATION (Supabase) =====
 const WEB=!window.api,CFG_K='gt-cfg';
 
+// GES Web : toucher l'icône ouvre le choix du logiciel (GESMAR, GESTIME, GESTAT)
+/* GES sur téléphone : toucher l'icône du logiciel ouvre le choix GESMAR / GESTIME / GESTAT (même adresse, même connexion, même magasin) */
+function gesMenu(cur,store){const A=[["gesmar","GESMAR","Marges, saisie, avoirs","../gesmar/"],["gestime","GESTIME","Plannings et heures","../gestime/"],["gestat","GESTAT","Ventes et caisse","../Gestat/"]];
+  let o=document.getElementById("gesMenu");if(o){o.remove();return}
+  if(!document.getElementById("gesMenuCss")){const st=document.createElement("style");st.id="gesMenuCss";st.textContent='#gesMenu{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}#gesMenu .gmb{background:#fff;color:#1d1d1f;width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(0,0,0,.25);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}#gesMenu h3{margin:2px 4px 10px;font-size:15px;color:#6b6b70;font-weight:700;letter-spacing:.06em}#gesMenu button{display:flex;width:100%;align-items:center;gap:12px;text-align:left;border:1.5px solid #e2e2e2;background:#fff;color:inherit;border-radius:12px;padding:12px 14px;margin:0 0 8px;font:inherit;cursor:pointer}#gesMenu button b{font-size:17px;letter-spacing:.04em;display:block}#gesMenu button span{font-size:13px;color:#6b6b70}#gesMenu button.on{border-color:#237a3b;background:#eef7f0}#gesMenu button i{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;color:#237a3b}#gesMenu .gmx{justify-content:center;border:none;background:#f1f1f1;font-weight:700;margin:4px 0 0}';document.head.appendChild(st)}
+  o=document.createElement("div");o.id="gesMenu";o.setAttribute("role","dialog");o.setAttribute("aria-label","Changer de logiciel");
+  o.innerHTML='<div class="gmb"><h3>CHANGER DE LOGICIEL</h3>'+A.map(a=>'<button data-ga="'+a[0]+'"'+(a[0]===cur?' class="on"':'')+'><div><b>'+a[1]+'</b><span>'+a[2]+'</span></div>'+(a[0]===cur?'<i>ouvert</i>':'')+'</button>').join("")+'<button class="gmx" data-ga="">Fermer</button></div>';
+  o.addEventListener("click",e=>{const b=e.target.closest("[data-ga]");if(!b&&e.target!==o)return;const k=b?b.dataset.ga:"";o.remove();if(!k||k===cur)return;const a=A.find(x=>x[0]===k);
+    try{localStorage.setItem("ges-app",k);const m=store();if(m){localStorage.setItem("gesmar.store",m);localStorage.setItem("gt-store",m);localStorage.setItem("gestat.store",m)}}catch(_){}location.href=a[3]});
+  document.body.appendChild(o)}
 // v62 : une seule icône « GES » sur le téléphone : toucher l'icône GESTIME passe à GESMAR Web (même adresse, même connexion, même magasin)
 (function(){if(window.api)return;try{localStorage.setItem('ges-app','gestime')}catch(e){}
- const bi=document.querySelector('.brand .bi');if(!bi)return;const w=document.createElement('span');w.className='bisw';w.setAttribute('role','button');w.tabIndex=0;w.title='Passer à GESMAR';w.setAttribute('aria-label','Passer à GESMAR');
+ const bi=document.querySelector('.brand .bi');if(!bi)return;const w=document.createElement('span');w.className='bisw';w.setAttribute('role','button');w.tabIndex=0;w.title='Changer de logiciel';w.setAttribute('aria-label','Changer de logiciel');
  bi.parentNode.insertBefore(w,bi);w.appendChild(bi);w.insertAdjacentHTML('beforeend','<span class="sw" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span>');
- const go=e=>{if(e)e.preventDefault();try{localStorage.setItem('ges-app','gesmar');localStorage.setItem('gesmar.store',STORE.id)}catch(_){}location.href='../gesmar/'};
+ const go=e=>{if(e)e.preventDefault();gesMenu('gestime',()=>STORE.id)};
  w.addEventListener('click',go);w.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e)})})();
 // Réglages Supabase : config.js sur PC ; sur téléphone, « code d'accès » collé une seule fois (jamais dans le dépôt public).
 function cfgRead(){if(window.SYNC&&window.SYNC.url&&window.SYNC.key&&!/VOTRE/.test(window.SYNC.url))return window.SYNC;try{const c=JSON.parse(localStorage.getItem(CFG_K)||'null');if(c&&c.url&&c.key)return c}catch(e){}return null}
